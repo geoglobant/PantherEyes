@@ -1,0 +1,19 @@
+{
+  "name": "@panthereyes/agent-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test src/planners/generatePolicyTests.integration.test.ts src/llm/routingPolicy.test.ts"
+  },
+  "dependencies": {
+    "@panthereyes/policy-engine": "workspace:*",
+    "@panthereyes/rule-catalog": "workspace:*",
+    "@panthereyes/sdk-ts": "workspace:*"
+  }
+}

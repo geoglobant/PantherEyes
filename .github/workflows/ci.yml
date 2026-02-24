@@ -1,0 +1,107 @@
+name: CI (PR)
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Node (lint/tests) / Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm -r --if-present run test
+
+  rust:
+    name: Rust (lint/tests) / ${{ matrix.toolchain }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [stable]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+
+  panthereyes-security:
+    name: PantherEyes Config + Static Scan Gate
+    runs-on: ubuntu-latest
+    needs: [node, rust]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Validate PantherEyes config files
+        run: |
+          cargo run -p panthereyes-cli -- config validate .panthereyes/policy.yaml
+          cargo run -p panthereyes-cli -- config validate .panthereyes/rules.yaml
+          cargo run -p panthereyes-cli -- config validate .panthereyes/exceptions.yaml
+
+      - name: Run PantherEyes static scan (JSON)
+        run: |
+          mkdir -p artifacts/scans
+          cargo run -p panthereyes-cli -- --json scan --phase static --target web . > artifacts/scans/pr-static-scan.json
+          jq . artifacts/scans/pr-static-scan.json
+
+      - name: Add scan summary
+        run: |
+          STATUS="$(jq -r '.summary.status' artifacts/scans/pr-static-scan.json)"
+          FINDINGS="$(jq -r '.summary.findings | length' artifacts/scans/pr-static-scan.json)"
+          {
+            echo "## PantherEyes Static Scan (PR)"
+            echo ""
+            echo "- Status: \`$STATUS\`"
+            echo "- Findings: \`$FINDINGS\`"
+            echo "- Phase: \`$(jq -r '.phase' artifacts/scans/pr-static-scan.json)\`"
+            echo "- Target: \`$(jq -r '.target' artifacts/scans/pr-static-scan.json)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail on block findings
+        run: |
+          STATUS="$(jq -r '.summary.status' artifacts/scans/pr-static-scan.json)"
+          if [ "$STATUS" = "block" ]; then
+            echo "PantherEyes scan status=block. Failing PR gate."
+            jq '.summary.findings' artifacts/scans/pr-static-scan.json
+            exit 1
+          fi
+
+      - name: Upload PR scan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: panthereyes-pr-static-scan
+          path: artifacts/scans/pr-static-scan.json

@@ -1,0 +1,39 @@
+version: 1
+defaults:
+  mode: warn
+  failOnSeverity: high
+  directives:
+    minScore: 80
+    requireApprovalForExceptions: true
+  ruleOverrides:
+    web.csp.required:
+      enabled: true
+      severity: high
+envs:
+  dev:
+    mode: audit
+    directives:
+      minScore: 60
+      sampleRate: 0.25
+    targets:
+      web:
+        failOnSeverity: critical
+        directives:
+          browserStackEnabled: true
+        ruleOverrides:
+          web.csp.required:
+            severity: medium
+      mobile:
+        directives:
+          emulatorChecks: false
+  prod:
+    mode: enforce
+    directives:
+      minScore: 95
+    targets:
+      web:
+        directives:
+          browserStackEnabled: false
+      mobile:
+        directives:
+          emulatorChecks: true

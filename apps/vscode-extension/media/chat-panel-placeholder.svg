@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#101418" />
+  <rect x="40" y="40" width="1120" height="620" rx="18" fill="#172028" stroke="#32485b" />
+  <rect x="70" y="80" width="1060" height="90" rx="12" fill="#22303c" />
+  <rect x="70" y="190" width="1060" height="160" rx="12" fill="#1c2a34" />
+  <rect x="70" y="370" width="1060" height="130" rx="12" fill="#1c2a34" />
+  <rect x="70" y="520" width="1060" height="110" rx="12" fill="#1c2a34" />
+  <text x="90" y="136" fill="#c6d6e3" font-family="Menlo, monospace" font-size="28">PantherEyes Chat Panel Placeholder</text>
+  <text x="90" y="240" fill="#8fb3cc" font-family="Menlo, monospace" font-size="20">Prompt + env/target + intent controls</text>
+  <text x="90" y="420" fill="#8fb3cc" font-family="Menlo, monospace" font-size="20">ChangeSet preview cards</text>
+  <text x="90" y="580" fill="#8fb3cc" font-family="Menlo, monospace" font-size="20">Raw JSON response</text>
+</svg>

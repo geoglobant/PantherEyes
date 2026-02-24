@@ -1,0 +1,28 @@
+version: 1
+rules:
+  - ruleId: web.csp.required
+    title: Content-Security-Policy obrigatoria
+    description: Aplicacoes web devem configurar CSP para reduzir risco de XSS.
+    defaultSeverity: high
+    remediation: Defina o header Content-Security-Policy com directives restritivas.
+    tags: [web, headers, xss]
+    allowException: true
+    targets: [web]
+
+  - ruleId: web.cookies.secure-flag
+    title: Cookies com Secure/HttpOnly
+    description: Cookies sensiveis devem usar flags Secure e HttpOnly.
+    defaultSeverity: medium
+    remediation: Configure cookies sensiveis com Secure=true e HttpOnly=true.
+    tags: [web, cookies, transport]
+    allowException: false
+    targets: [web]
+
+  - ruleId: mobile.debug.disabled
+    title: Build release sem debug
+    description: Builds mobile de producao nao devem expor debugging habilitado.
+    defaultSeverity: medium
+    remediation: Garanta que variantes release estejam sem debuggable/debug flags.
+    tags: [mobile, release-hardening]
+    allowException: false
+    targets: [mobile]

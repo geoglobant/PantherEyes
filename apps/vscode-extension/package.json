@@ -1,0 +1,68 @@
+{
+  "name": "panthereyes-vscode-extension",
+  "displayName": "PantherEyes",
+  "description": "VS Code extension scaffold for PantherEyes security feedback.",
+  "version": "0.1.0",
+  "publisher": "panthereyes",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": ["Linters", "Other"],
+  "activationEvents": [
+    "onCommand:panthereyes.askAgent",
+    "onCommand:panthereyes.validateSecurityConfig",
+    "onCommand:panthereyes.runScan",
+    "onCommand:panthereyes.setLlmProvider"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "PantherEyes",
+      "properties": {
+        "panthereyes.agentServerUrl": {
+          "type": "string",
+          "default": "http://localhost:4711/chat",
+          "description": "PantherEyes agent-server /chat endpoint."
+        },
+        "panthereyes.defaultEnv": {
+          "type": "string",
+          "default": "dev",
+          "description": "Default environment sent to the agent chat panel."
+        },
+        "panthereyes.defaultTarget": {
+          "type": "string",
+          "enum": ["web", "mobile"],
+          "default": "web",
+          "description": "Default target used by PantherEyes commands."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "panthereyes.askAgent",
+        "title": "PantherEyes: Ask Agent"
+      },
+      {
+        "command": "panthereyes.validateSecurityConfig",
+        "title": "PantherEyes: Validate Security Config"
+      },
+      {
+        "command": "panthereyes.runScan",
+        "title": "PantherEyes: Run Scan"
+      },
+      {
+        "command": "panthereyes.setLlmProvider",
+        "title": "PantherEyes: Set LLM Provider"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "vscode:prepublish": "pnpm run build"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.95.0"
+  }
+}

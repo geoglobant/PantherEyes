@@ -1,0 +1,19 @@
+[package]
+name = "panthereyes-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "panthereyes"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.95"
+clap = { version = "4.5.23", features = ["derive"] }
+panthereyes-checks-mobile = { path = "../panthereyes-checks-mobile" }
+panthereyes-checks-web = { path = "../panthereyes-checks-web" }
+panthereyes-core = { path = "../panthereyes-core" }
+serde = { version = "1.0.216", features = ["derive"] }
+serde_json = "1.0.133"
+thiserror = "2.0.9"

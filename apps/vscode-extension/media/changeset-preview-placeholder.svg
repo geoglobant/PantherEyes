@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+  <rect width="1200" height="650" fill="#101418" />
+  <rect x="40" y="40" width="1120" height="570" rx="18" fill="#172028" stroke="#32485b" />
+  <text x="80" y="100" fill="#c6d6e3" font-family="Menlo, monospace" font-size="28">ChangeSet Preview Placeholder</text>
+  <rect x="80" y="140" width="1040" height="140" rx="12" fill="#1f2f3c" />
+  <rect x="80" y="300" width="1040" height="140" rx="12" fill="#1f2f3c" />
+  <rect x="80" y="460" width="1040" height="110" rx="12" fill="#1f2f3c" />
+  <text x="100" y="200" fill="#8fb3cc" font-family="Menlo, monospace" font-size="18">CREATE tests/policy/prod/web.effective-policy.test.ts</text>
+  <text x="100" y="360" fill="#8fb3cc" font-family="Menlo, monospace" font-size="18">CREATE tests/policy/prod/web.effective-policy.snapshot.json</text>
+  <text x="100" y="520" fill="#8fb3cc" font-family="Menlo, monospace" font-size="18">CREATE tests/policy/prod/README.md</text>
+</svg>

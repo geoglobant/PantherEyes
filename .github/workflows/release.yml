@@ -1,0 +1,65 @@
+name: CI Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  panthereyes-release-scan:
+    name: PantherEyes Release Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Prepare artifact directory
+        run: mkdir -p artifacts/scans
+
+      - name: PantherEyes static scan (JSON)
+        run: |
+          cargo run -p panthereyes-cli -- --json scan --phase static --target web . > artifacts/scans/static-scan.json
+          jq . artifacts/scans/static-scan.json
+
+      - name: PantherEyes non-static scan (stub, JSON)
+        run: |
+          cargo run -p panthereyes-cli -- --json scan --phase non-static --target web . > artifacts/scans/non-static-scan.json
+          jq . artifacts/scans/non-static-scan.json
+
+      - name: Workflow summary
+        run: |
+          STATIC_STATUS="$(jq -r '.summary.status' artifacts/scans/static-scan.json)"
+          STATIC_FINDINGS="$(jq -r '.summary.findings | length' artifacts/scans/static-scan.json)"
+          NON_STATIC_STATUS="$(jq -r '.summary.status' artifacts/scans/non-static-scan.json)"
+          NON_STATIC_FINDINGS="$(jq -r '.summary.findings | length' artifacts/scans/non-static-scan.json)"
+
+          {
+            echo "## PantherEyes Release Scan Summary"
+            echo ""
+            echo "| Phase | Status | Findings | Notes |"
+            echo "| --- | --- | ---: | --- |"
+            echo "| static | $STATIC_STATUS | $STATIC_FINDINGS | CLI static checks |"
+            echo "| non-static | $NON_STATIC_STATUS | $NON_STATIC_FINDINGS | Stub (placeholder for dynamic/runtime checks) |"
+            echo ""
+            echo "Artifacts uploaded: \`panthereyes-release-scans\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload scan JSON artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: panthereyes-release-scans
+          path: artifacts/scans/*.json

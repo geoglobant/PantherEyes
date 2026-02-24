@@ -1,0 +1,8 @@
+[package]
+name = "panthereyes-checks-mobile"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+panthereyes-core = { path = "../panthereyes-core" }

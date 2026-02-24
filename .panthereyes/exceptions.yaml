@@ -1,0 +1,20 @@
+version: 1
+exceptions:
+  - exceptionId: EXC-001
+    ruleId: web.csp.required
+    environments: [dev]
+    targets: [web]
+    reason: Ambiente local de desenvolvimento legado sem reverse proxy de headers.
+    approvedBy: security-team
+    expiresOn: 2099-12-31
+    scope:
+      paths:
+        - apps/legacy-web/**
+
+  - exceptionId: EXC-002
+    ruleId: mobile.debug.disabled
+    environments: [dev]
+    targets: [mobile]
+    reason: Build interna de QA temporaria.
+    approvedBy: mobile-security
+    expiresOn: 2099-12-31

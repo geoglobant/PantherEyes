@@ -1,0 +1,531 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B134B806D7928A3BB98DE99E /* SmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB461E052063222B1608B47 /* SmokeTests.swift */; };
+		B7F201E0EAFD381BC9E29F4C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D702FFEF02667A35EDE040B9 /* AppDelegate.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		74C8BC316898A4FDC52A04A9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E147BAA2FC2ED53451DA0096 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E6136E0B7376AB38CFCE2B59;
+			remoteInfo = PantherEyesSampleIOS;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4D6D6CDC77CD3EFF6D933C9E /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9AA4A33F842250B54DE900B8 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		5E30F924C1B1C931466AC84F /* PantherEyesSampleIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PantherEyesSampleIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		620810A18B7714904DDD2656 /* PantherEyesPolicyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PantherEyesPolicyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		730D0054EA758346BFDC19A9 /* PantherEyesSampleIOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "PantherEyesSampleIOS-Info.plist"; sourceTree = "<group>"; };
+		8BB461E052063222B1608B47 /* SmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokeTests.swift; sourceTree = "<group>"; };
+		BC3CCD0EB7176006DE836C8C /* PantherEyesPolicyTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "PantherEyesPolicyTests-Info.plist"; sourceTree = "<group>"; };
+		D702FFEF02667A35EDE040B9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0EFFFB572C18EDA403FA11AC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7D4076B00802E533B409A805 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1AF02396A14C647211CDDCEB /* PantherEyesPolicyTests */ = {
+			isa = PBXGroup;
+			children = (
+				8BB461E052063222B1608B47 /* SmokeTests.swift */,
+			);
+			path = PantherEyesPolicyTests;
+			sourceTree = "<group>";
+		};
+		215D5910D6EC7A6D66E51328 /* InfoPlists */ = {
+			isa = PBXGroup;
+			children = (
+				BC3CCD0EB7176006DE836C8C /* PantherEyesPolicyTests-Info.plist */,
+				730D0054EA758346BFDC19A9 /* PantherEyesSampleIOS-Info.plist */,
+			);
+			path = InfoPlists;
+			sourceTree = "<group>";
+		};
+		2E325978E835793F78EF8F6C /* Derived */ = {
+			isa = PBXGroup;
+			children = (
+				215D5910D6EC7A6D66E51328 /* InfoPlists */,
+			);
+			path = Derived;
+			sourceTree = "<group>";
+		};
+		339BE41DC3123D9F55DCC606 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				620810A18B7714904DDD2656 /* PantherEyesPolicyTests.xctest */,
+				5E30F924C1B1C931466AC84F /* PantherEyesSampleIOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3D290C194D4FF13A1004E770 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				1AF02396A14C647211CDDCEB /* PantherEyesPolicyTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		58062D98BB7CFB4A915A515D /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				D702FFEF02667A35EDE040B9 /* AppDelegate.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		6D7FF7465F040179942C44DC /* Project */ = {
+			isa = PBXGroup;
+			children = (
+				2E325978E835793F78EF8F6C /* Derived */,
+				81DF5AA7EA6FAC2ACBAC393F /* ios */,
+			);
+			name = Project;
+			sourceTree = "<group>";
+		};
+		7D3505B2DD0B4AF5AAC79D61 = {
+			isa = PBXGroup;
+			children = (
+				339BE41DC3123D9F55DCC606 /* Products */,
+				6D7FF7465F040179942C44DC /* Project */,
+			);
+			sourceTree = "<group>";
+		};
+		81DF5AA7EA6FAC2ACBAC393F /* ios */ = {
+			isa = PBXGroup;
+			children = (
+				58062D98BB7CFB4A915A515D /* Sources */,
+				3D290C194D4FF13A1004E770 /* Tests */,
+			);
+			path = ios;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		09EB60F4C12EFC100554E4AB /* PantherEyesPolicyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 26C477146BE5F72FF7E940FD /* Build configuration list for PBXNativeTarget "PantherEyesPolicyTests" */;
+			buildPhases = (
+				21D1DBC228BBDE1C87008FDD /* Sources */,
+				0303C8DD1067A7CA6291663F /* Resources */,
+				7D4076B00802E533B409A805 /* Frameworks */,
+				4D6D6CDC77CD3EFF6D933C9E /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA15BC4975F9CBA594BB0259 /* PBXTargetDependency */,
+			);
+			name = PantherEyesPolicyTests;
+			packageProductDependencies = (
+			);
+			productName = PantherEyesPolicyTests;
+			productReference = 620810A18B7714904DDD2656 /* PantherEyesPolicyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E6136E0B7376AB38CFCE2B59 /* PantherEyesSampleIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1EC59D6947E0D42FDC39AA9C /* Build configuration list for PBXNativeTarget "PantherEyesSampleIOS" */;
+			buildPhases = (
+				4B67254DF4A5A1AB4E0FF2CF /* Sources */,
+				55640282E43BA346FA42878D /* Resources */,
+				0EFFFB572C18EDA403FA11AC /* Frameworks */,
+				9AA4A33F842250B54DE900B8 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PantherEyesSampleIOS;
+			packageProductDependencies = (
+			);
+			productName = PantherEyesSampleIOS;
+			productReference = 5E30F924C1B1C931466AC84F /* PantherEyesSampleIOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E147BAA2FC2ED53451DA0096 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				TargetAttributes = {
+					09EB60F4C12EFC100554E4AB = {
+						TestTargetID = E6136E0B7376AB38CFCE2B59;
+					};
+				};
+			};
+			buildConfigurationList = 79615E83496672B533AADC2E /* Build configuration list for PBXProject "PantherEyesSampleIOS" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 7D3505B2DD0B4AF5AAC79D61;
+			productRefGroup = 339BE41DC3123D9F55DCC606 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				09EB60F4C12EFC100554E4AB /* PantherEyesPolicyTests */,
+				E6136E0B7376AB38CFCE2B59 /* PantherEyesSampleIOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0303C8DD1067A7CA6291663F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		55640282E43BA346FA42878D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		21D1DBC228BBDE1C87008FDD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B134B806D7928A3BB98DE99E /* SmokeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4B67254DF4A5A1AB4E0FF2CF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B7F201E0EAFD381BC9E29F4C /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA15BC4975F9CBA594BB0259 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = PantherEyesSampleIOS;
+			target = E6136E0B7376AB38CFCE2B59 /* PantherEyesSampleIOS */;
+			targetProxy = 74C8BC316898A4FDC52A04A9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0FD8B965441B80A544AA0345 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		2C35D5CB64565087F4E03BC7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		4AB23A9B8ECFA6855195B072 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "Derived/InfoPlists/PantherEyesSampleIOS-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.panthereyes.sampleios;
+				PRODUCT_NAME = PantherEyesSampleIOS;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		56959BE7D18C688A60FC88F5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "Derived/InfoPlists/PantherEyesSampleIOS-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.panthereyes.sampleios;
+				PRODUCT_NAME = PantherEyesSampleIOS;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		72D2E122A42CCA0529802D10 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Derived/InfoPlists/PantherEyesPolicyTests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.panthereyes.sampleios.tests;
+				PRODUCT_NAME = PantherEyesPolicyTests;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PantherEyesSampleIOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PantherEyesSampleIOS";
+				TEST_TARGET_NAME = PantherEyesSampleIOS;
+			};
+			name = Release;
+		};
+		F28C7F445FEAFFEF653739B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Derived/InfoPlists/PantherEyesPolicyTests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.panthereyes.sampleios.tests;
+				PRODUCT_NAME = PantherEyesPolicyTests;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PantherEyesSampleIOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PantherEyesSampleIOS";
+				TEST_TARGET_NAME = PantherEyesSampleIOS;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1EC59D6947E0D42FDC39AA9C /* Build configuration list for PBXNativeTarget "PantherEyesSampleIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				56959BE7D18C688A60FC88F5 /* Debug */,
+				4AB23A9B8ECFA6855195B072 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		26C477146BE5F72FF7E940FD /* Build configuration list for PBXNativeTarget "PantherEyesPolicyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F28C7F445FEAFFEF653739B7 /* Debug */,
+				72D2E122A42CCA0529802D10 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		79615E83496672B533AADC2E /* Build configuration list for PBXProject "PantherEyesSampleIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FD8B965441B80A544AA0345 /* Debug */,
+				2C35D5CB64565087F4E03BC7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E147BAA2FC2ED53451DA0096 /* Project object */;
+}

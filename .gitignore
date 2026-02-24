@@ -1,0 +1,42 @@
+# Node / pnpm
+node_modules/
+.pnpm-store/
+.npm/
+
+# Build outputs
+dist/
+build/
+coverage/
+*.tsbuildinfo
+artifacts/
+
+# Rust
+/target
+
+# VS Code extension packaging
+*.vsix
+.vscode-test/
+
+# OS / Editors
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Android / Gradle
+.gradle/
+local.properties
+*.iml
+*.apk
+*.aab
+**/app/build/
+**/build/
+
+# iOS / Xcode / Tuist
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+.build/
+.swiftpm/
+.tuist-cache/
