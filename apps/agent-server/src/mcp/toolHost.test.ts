@@ -7,7 +7,7 @@ test('mcp tool host lists PantherEyes tools', () => {
   const host = new PantherEyesMcpToolHost(createMcpLogger({ test: 'tool-list' }));
   const tools = host.listTools();
 
-  assert.equal(tools.length, 9);
+  assert.equal(tools.length, 10);
   assert.deepEqual(
     tools.map((tool) => tool.name),
     [
@@ -15,6 +15,7 @@ test('mcp tool host lists PantherEyes tools', () => {
       'panthereyes.preview_effective_policy',
       'panthereyes.list_effective_directives',
       'panthereyes.compare_policy_envs',
+      'panthereyes.compare_policy_envs_report',
       'panthereyes.scan',
       'panthereyes.generate_policy_tests',
       'panthereyes.explain_finding',
@@ -141,4 +142,31 @@ test('mcp create_policy_exception returns planner ChangeSet', async () => {
   assert.equal(structured.planner.plannerId, 'create_policy_exception');
   assert.equal(structured.planner.changeSet.dryRun, true);
   assert.equal(structured.planner.changeSet.changes[0]?.path, '.panthereyes/exceptions.yaml');
+});
+
+test('mcp compare_policy_envs_report returns markdown + json report', async () => {
+  const host = new PantherEyesMcpToolHost(createMcpLogger({ test: 'compare-policy-envs-report' }));
+  const result = await host.callTool({
+    name: 'panthereyes.compare_policy_envs_report',
+    arguments: {
+      rootDir: 'samples/ios-panthereyes-demo',
+      target: 'mobile',
+      baseEnv: 'dev',
+      compareEnv: 'prod',
+      format: 'both',
+    },
+  });
+
+  assert.equal(result.content.some((item) => item.type === 'text'), true);
+  assert.equal(result.content.some((item) => item.type === 'json'), true);
+  const structured = result.structuredContent as {
+    reportType: string;
+    summary: { headline: string };
+    markdown: string;
+    gate: { shouldReview: boolean };
+  };
+  assert.equal(structured.reportType, 'panthereyes.policy_env_comparison');
+  assert.match(structured.summary.headline, /Policy diff|No effective policy diff/);
+  assert.match(structured.markdown, /PantherEyes Policy Comparison Report/);
+  assert.equal(typeof structured.gate.shouldReview, 'boolean');
 });

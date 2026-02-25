@@ -17,6 +17,7 @@ PantherEyes tools exposed:
 - `panthereyes.preview_effective_policy`
 - `panthereyes.list_effective_directives`
 - `panthereyes.compare_policy_envs`
+- `panthereyes.compare_policy_envs_report`
 - `panthereyes.scan`
 - `panthereyes.generate_policy_tests`
 - `panthereyes.explain_finding`
@@ -100,6 +101,28 @@ corepack pnpm mcp:up:dev
   }
 }
 ```
+
+### `panthereyes.compare_policy_envs_report`
+
+```json
+{
+  "name": "panthereyes.compare_policy_envs_report",
+  "arguments": {
+    "rootDir": "samples/ios-panthereyes-demo",
+    "target": "mobile",
+    "baseEnv": "dev",
+    "compareEnv": "prod",
+    "format": "both"
+  }
+}
+```
+
+Returns a CI-friendly report with:
+
+- `summary` (diff counts + headline)
+- `gate.shouldReview` (simple bot-friendly flag)
+- `diff` (full structured comparison)
+- `markdown` (human-readable report text)
 
 ### `panthereyes.scan`
 
@@ -209,7 +232,7 @@ Required fields conceptually:
 After registering the MCP server in your client:
 
 1. Verify the client can connect and list tools.
-2. Confirm these tools appear: `panthereyes.scan`, `panthereyes.compare_policy_envs`, `panthereyes.generate_policy_tests`, `panthereyes.explain_finding`, `panthereyes.create_policy_exception`.
+2. Confirm these tools appear: `panthereyes.scan`, `panthereyes.compare_policy_envs`, `panthereyes.compare_policy_envs_report`, `panthereyes.generate_policy_tests`, `panthereyes.explain_finding`, `panthereyes.create_policy_exception`.
 3. Run a simple call with `samples/ios-panthereyes-demo` as `rootDir`.
 4. Check MCP logs (stderr) if the client reports startup errors.
 

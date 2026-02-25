@@ -19,6 +19,7 @@ type McpToolName =
   | 'panthereyes.list_effective_directives'
   | 'panthereyes.generate_policy_tests'
   | 'panthereyes.compare_policy_envs'
+  | 'panthereyes.compare_policy_envs_report'
   | 'panthereyes.scan'
   | 'panthereyes.explain_finding'
   | 'panthereyes.suggest_remediation'
@@ -96,6 +97,20 @@ export class PantherEyesMcpToolHost {
             target: { type: 'string', enum: ['web', 'mobile'] },
             baseEnv: { type: 'string', description: 'Reference environment (e.g., dev)' },
             compareEnv: { type: 'string', description: 'Environment to compare against (e.g., prod)' },
+          },
+          ['rootDir', 'target', 'baseEnv', 'compareEnv'],
+        ),
+      },
+      {
+        name: 'panthereyes.compare_policy_envs_report',
+        description: 'Generate a CI-friendly report (JSON + markdown) comparing policy environments for a target.',
+        inputSchema: objectSchema(
+          {
+            rootDir: { type: 'string' },
+            target: { type: 'string', enum: ['web', 'mobile'] },
+            baseEnv: { type: 'string' },
+            compareEnv: { type: 'string' },
+            format: { type: 'string', enum: ['markdown', 'json', 'both'], default: 'both' },
           },
           ['rootDir', 'target', 'baseEnv', 'compareEnv'],
         ),
@@ -282,6 +297,56 @@ export class PantherEyesMcpToolHost {
             { type: 'json', json: diff },
           ],
           structuredContent: diff,
+        };
+      }
+
+      case 'panthereyes.compare_policy_envs_report': {
+        const rootDir = readString(rawArgs, 'rootDir');
+        const target = readTarget(rawArgs, 'target');
+        const baseEnv = readString(rawArgs, 'baseEnv');
+        const compareEnv = readString(rawArgs, 'compareEnv');
+        const format = readOptionalEnum(rawArgs, 'format', ['markdown', 'json', 'both'] as const) ?? 'both';
+
+        const basePreview = await this.runTool('preview_effective_policy', { rootDir, env: baseEnv, target });
+        const comparePreview = await this.runTool('preview_effective_policy', {
+          rootDir,
+          env: compareEnv,
+          target,
+        });
+        const baseDirectives = await this.runTool('list_effective_directives', {
+          rootDir,
+          env: baseEnv,
+          target,
+        });
+        const compareDirectives = await this.runTool('list_effective_directives', {
+          rootDir,
+          env: compareEnv,
+          target,
+        });
+
+        const diff = comparePolicyEnvs({
+          rootDir,
+          target,
+          baseEnv,
+          compareEnv,
+          basePreview,
+          comparePreview,
+          baseDirectives,
+          compareDirectives,
+        });
+        const report = buildComparePolicyEnvsReport(diff);
+        const content: McpToolCallResult['content'] = [];
+        if (format === 'markdown' || format === 'both') {
+          content.push({ type: 'text', text: report.markdown });
+        } else {
+          content.push({ type: 'text', text: report.summary.headline });
+        }
+        if (format === 'json' || format === 'both') {
+          content.push({ type: 'json', json: report });
+        }
+        return {
+          content,
+          structuredContent: report,
         };
       }
 
@@ -504,10 +569,11 @@ function objectSchema(properties: Record<string, unknown>, required: string[]): 
 function assertMcpToolName(name: string): McpToolName {
   const allowed = new Set<McpToolName>([
     'panthereyes.validate_security_config',
-    'panthereyes.preview_effective_policy',
+      'panthereyes.preview_effective_policy',
       'panthereyes.list_effective_directives',
       'panthereyes.generate_policy_tests',
       'panthereyes.compare_policy_envs',
+      'panthereyes.compare_policy_envs_report',
       'panthereyes.scan',
       'panthereyes.explain_finding',
       'panthereyes.suggest_remediation',
@@ -577,6 +643,21 @@ function readOptionalBoolean(source: Record<string, unknown>, field: string): bo
     throw new Error(`Invalid tools/call argument '${field}': expected boolean`);
   }
   return value;
+}
+
+function readOptionalEnum<const TValues extends readonly string[]>(
+  source: Record<string, unknown>,
+  field: string,
+  values: TValues,
+): TValues[number] | undefined {
+  const value = readOptionalString(source, field);
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!values.includes(value)) {
+    throw new Error(`Invalid tools/call argument '${field}': expected one of ${values.join(', ')}`);
+  }
+  return value as TValues[number];
 }
 
 function readPhase(source: Record<string, unknown>, field: string): 'static' | 'non-static' {
@@ -707,6 +788,79 @@ function comparePolicyEnvs(input: ComparePolicyEnvInput) {
     },
     directiveDiffs,
     ruleDiffs,
+  };
+}
+
+function buildComparePolicyEnvsReport(diff: ReturnType<typeof comparePolicyEnvs>) {
+  const generatedAt = new Date().toISOString();
+  const headline = diff.summary.changesDetected
+    ? `Policy diff detected for ${diff.target}: ${diff.environments.base} -> ${diff.environments.compare}`
+    : `No effective policy diff for ${diff.target}: ${diff.environments.base} -> ${diff.environments.compare}`;
+
+  const gate = {
+    shouldReview: diff.summary.changesDetected,
+    reason: diff.summary.changesDetected
+      ? 'Effective policy differences detected between compared environments.'
+      : 'No effective policy differences detected.',
+  };
+
+  const markdownLines = [
+    `# PantherEyes Policy Comparison Report`,
+    ``,
+    `- Generated at: ${generatedAt}`,
+    `- Root: \`${diff.rootDir}\``,
+    `- Target: \`${diff.target}\``,
+    `- Environments: \`${diff.environments.base}\` -> \`${diff.environments.compare}\``,
+    `- Changes detected: **${diff.summary.changesDetected ? 'yes' : 'no'}**`,
+    `- Mode changed: **${diff.summary.modeChanged ? 'yes' : 'no'}**`,
+    `- Fail-on-severity changed: **${diff.summary.failOnSeverityChanged ? 'yes' : 'no'}**`,
+    `- Directive diffs: **${diff.summary.directiveDiffCount}**`,
+    `- Rule diffs: **${diff.summary.ruleDiffCount}**`,
+    ``,
+    `## Base`,
+    `- mode: \`${diff.base.mode}\``,
+    `- failOnSeverity: \`${diff.base.failOnSeverity}\``,
+    `- ruleCount: ${diff.base.ruleCount}`,
+    `- directivesCount: ${diff.base.directivesCount}`,
+    ``,
+    `## Compare`,
+    `- mode: \`${diff.compare.mode}\``,
+    `- failOnSeverity: \`${diff.compare.failOnSeverity}\``,
+    `- ruleCount: ${diff.compare.ruleCount}`,
+    `- directivesCount: ${diff.compare.directivesCount}`,
+    ``,
+    `## Gate`,
+    `- shouldReview: **${gate.shouldReview ? 'true' : 'false'}**`,
+    `- reason: ${gate.reason}`,
+    ``,
+  ];
+
+  if (diff.directiveDiffs.length > 0) {
+    markdownLines.push('## Directive Diffs');
+    for (const entry of diff.directiveDiffs) {
+      markdownLines.push(`- \`${entry.key}\` (${entry.kind})`);
+    }
+    markdownLines.push('');
+  }
+
+  if (diff.ruleDiffs.length > 0) {
+    markdownLines.push('## Rule Diffs');
+    for (const entry of diff.ruleDiffs) {
+      markdownLines.push(`- \`${entry.ruleId}\` (${entry.kind})`);
+    }
+    markdownLines.push('');
+  }
+
+  return {
+    reportType: 'panthereyes.policy_env_comparison',
+    generatedAt,
+    summary: {
+      headline,
+      ...diff.summary,
+    },
+    gate,
+    diff,
+    markdown: markdownLines.join('\n'),
   };
 }
 

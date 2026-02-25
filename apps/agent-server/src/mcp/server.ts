@@ -9,20 +9,32 @@ const JSON_RPC_INTERNAL_ERROR = -32603;
 
 export class PantherEyesMcpServer {
   private readonly tools: PantherEyesMcpToolHost;
-  private readonly protocol: StdioJsonRpcProtocol;
+  private readonly protocol: McpServerProtocol;
 
-  constructor(private readonly logger: Logger) {
-    this.tools = new PantherEyesMcpToolHost(logger.child({ component: 'mcp.tools' }));
-    this.protocol = new StdioJsonRpcProtocol({
-      onRequest: (message) => this.handleRequest(message),
-      onProtocolError: (error) => this.logger.error('mcp.protocol.error', { error }),
-    });
+  constructor(
+    private readonly logger: Logger,
+    deps?: {
+      tools?: PantherEyesMcpToolHost;
+      protocol?: McpServerProtocol;
+    },
+  ) {
+    this.tools = deps?.tools ?? new PantherEyesMcpToolHost(logger.child({ component: 'mcp.tools' }));
+    this.protocol =
+      deps?.protocol ??
+      new StdioJsonRpcProtocol({
+        onRequest: (message) => this.handleRequest(message),
+        onProtocolError: (error) => this.logger.error('mcp.protocol.error', { error }),
+      });
   }
 
   start(): void {
     this.logger.info('mcp.server.start', { transport: 'stdio' });
     this.protocol.attach();
     process.stdin.resume();
+  }
+
+  async dispatchRequestForTest(message: JsonRpcRequest): Promise<void> {
+    await this.handleRequest(message);
   }
 
   private async handleRequest(message: JsonRpcRequest): Promise<void> {
@@ -93,6 +105,12 @@ export class PantherEyesMcpServer {
       this.protocol.writeError(message.id, JSON_RPC_INTERNAL_ERROR, err.message);
     }
   }
+}
+
+interface McpServerProtocol {
+  attach(): void;
+  writeResult(id: string | number | null, result: unknown): void;
+  writeError(id: string | number | null, code: number, message: string, data?: unknown): void;
 }
 
 function asRecord(value: unknown, label: string): Record<string, unknown> {
