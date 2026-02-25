@@ -19,6 +19,7 @@ PantherEyes tools exposed:
 - `panthereyes.compare_policy_envs`
 - `panthereyes.compare_policy_envs_report`
 - `panthereyes.scan`
+- `panthereyes.scan_gate`
 - `panthereyes.generate_policy_tests`
 - `panthereyes.explain_finding`
 - `panthereyes.suggest_remediation`
@@ -137,6 +138,28 @@ Returns a CI-friendly report with:
 }
 ```
 
+### `panthereyes.scan_gate`
+
+```json
+{
+  "name": "panthereyes.scan_gate",
+  "arguments": {
+    "rootDir": "samples/ios-panthereyes-demo",
+    "target": "mobile",
+    "phase": "static",
+    "failOn": ["block"]
+  }
+}
+```
+
+Returns a CI/bot-friendly decision object with:
+
+- `scan.status`
+- `scan.findingsCount`
+- `gate.decision`
+- `gate.shouldFail`
+- `gate.failOn`
+
 ### `panthereyes.explain_finding`
 
 ```json
@@ -235,6 +258,37 @@ After registering the MCP server in your client:
 2. Confirm these tools appear: `panthereyes.scan`, `panthereyes.compare_policy_envs`, `panthereyes.compare_policy_envs_report`, `panthereyes.generate_policy_tests`, `panthereyes.explain_finding`, `panthereyes.create_policy_exception`.
 3. Run a simple call with `samples/ios-panthereyes-demo` as `rootDir`.
 4. Check MCP logs (stderr) if the client reports startup errors.
+
+## HTTP Tools Bridge (for clients without MCP)
+
+The HTTP `agent-server` also exposes a simple tools bridge that reuses the same MCP tool host.
+
+### List tools
+
+```bash
+curl -s http://localhost:4711/tools/list | jq .
+```
+
+### Call a tool
+
+```bash
+curl -s http://localhost:4711/tools/call \
+  -H 'content-type: application/json' \
+  -d '{
+    "name": "panthereyes.scan_gate",
+    "arguments": {
+      "rootDir": "samples/ios-panthereyes-demo",
+      "target": "mobile",
+      "phase": "static",
+      "failOn": ["block"]
+    }
+  }' | jq .
+```
+
+Bridge endpoints:
+
+- `GET /tools/list`
+- `POST /tools/call`
 
 ## Related `/chat` intents (agent-server)
 

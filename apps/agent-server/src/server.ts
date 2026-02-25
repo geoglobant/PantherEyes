@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import { PantherEyesMcpToolHost } from './mcp/toolHost';
 import { AgentRuntime } from './runtime';
 import type { Logger } from './logging';
 import type { ChatRequest } from './types';
@@ -58,6 +59,8 @@ function assertChatRequest(payload: unknown): asserts payload is ChatRequest {
 }
 
 export function createAgentHttpServer(runtime: AgentRuntime, logger: Logger): Server {
+  const mcpToolHost = new PantherEyesMcpToolHost(logger.child({ component: 'http.tools' }));
+
   return createServer(async (req, res) => {
     const requestLogger = logger.child({ method: req.method, url: req.url });
 
@@ -89,6 +92,58 @@ export function createAgentHttpServer(runtime: AgentRuntime, logger: Logger): Se
         sendJson(res, 400, { error: err.message });
       }
 
+      return;
+    }
+
+    if (req.url === '/tools/list') {
+      if (req.method !== 'GET') {
+        sendJson(res, 405, { error: 'Method not allowed', allowed: ['GET'] });
+        return;
+      }
+
+      try {
+        sendJson(res, 200, { tools: mcpToolHost.listTools() });
+      } catch (error) {
+        const err = error as Error;
+        requestLogger.error('http.tools.list.error', { error: err });
+        sendJson(res, 500, { error: err.message });
+      }
+      return;
+    }
+
+    if (req.url === '/tools/call') {
+      if (req.method !== 'POST') {
+        sendJson(res, 405, { error: 'Method not allowed', allowed: ['POST'] });
+        return;
+      }
+
+      try {
+        const payload = await readJsonBody<unknown>(req);
+        if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+          throw new Error('Invalid payload: expected object');
+        }
+        const body = payload as Record<string, unknown>;
+        if (typeof body.name !== 'string' || body.name.trim() === '') {
+          throw new Error('Invalid payload: name is required');
+        }
+        if (body.arguments !== undefined && (typeof body.arguments !== 'object' || body.arguments === null || Array.isArray(body.arguments))) {
+          throw new Error('Invalid payload: arguments must be an object');
+        }
+
+        requestLogger.info('http.tools.call.received', {
+          name: body.name,
+        });
+
+        const result = await mcpToolHost.callTool({
+          name: body.name,
+          arguments: body.arguments,
+        });
+        sendJson(res, 200, result);
+      } catch (error) {
+        const err = error as Error;
+        requestLogger.error('http.tools.call.error', { error: err });
+        sendJson(res, 400, { error: err.message });
+      }
       return;
     }
 

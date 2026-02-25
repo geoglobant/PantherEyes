@@ -21,6 +21,7 @@ type McpToolName =
   | 'panthereyes.compare_policy_envs'
   | 'panthereyes.compare_policy_envs_report'
   | 'panthereyes.scan'
+  | 'panthereyes.scan_gate'
   | 'panthereyes.explain_finding'
   | 'panthereyes.suggest_remediation'
   | 'panthereyes.create_policy_exception';
@@ -123,6 +124,23 @@ export class PantherEyesMcpToolHost {
             rootDir: { type: 'string', description: 'Path to scan (sample/app root)' },
             target: { type: 'string', enum: ['web', 'mobile'] },
             phase: { type: 'string', enum: ['static', 'non-static'], default: 'static' },
+          },
+          ['rootDir', 'target'],
+        ),
+      },
+      {
+        name: 'panthereyes.scan_gate',
+        description: 'Run PantherEyes scan and return a CI-friendly gate decision (pass/warn/block).',
+        inputSchema: objectSchema(
+          {
+            rootDir: { type: 'string', description: 'Path to scan (sample/app root)' },
+            target: { type: 'string', enum: ['web', 'mobile'] },
+            phase: { type: 'string', enum: ['static', 'non-static'], default: 'static' },
+            failOn: {
+              type: 'array',
+              description: 'Statuses that should fail CI (default: [\"block\"])',
+              items: { type: 'string', enum: ['warn', 'block'] },
+            },
           },
           ['rootDir', 'target'],
         ),
@@ -377,6 +395,30 @@ export class PantherEyesMcpToolHost {
         };
       }
 
+      case 'panthereyes.scan_gate': {
+        const rootDir = readString(rawArgs, 'rootDir');
+        const target = readTarget(rawArgs, 'target');
+        const phase = readPhase(rawArgs, 'phase');
+        const failOn = readFailOnStatuses(rawArgs, 'failOn') ?? ['block'];
+        const scanResult = await runPantherEyesScanCli({
+          cwd: process.cwd(),
+          rootDir,
+          target,
+          phase,
+        });
+        const gate = buildScanGateResult({ rootDir, target, phase, failOn, scanResult });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `${gate.gate.decision.toUpperCase()} gate for ${target}/${phase} (fail=${gate.gate.shouldFail ? 'yes' : 'no'})`,
+            },
+            { type: 'json', json: gate },
+          ],
+          structuredContent: gate,
+        };
+      }
+
       case 'panthereyes.explain_finding': {
         const findingId = readString(rawArgs, 'findingId');
         const knowledge = resolveFindingKnowledge(findingId);
@@ -575,6 +617,7 @@ function assertMcpToolName(name: string): McpToolName {
       'panthereyes.compare_policy_envs',
       'panthereyes.compare_policy_envs_report',
       'panthereyes.scan',
+      'panthereyes.scan_gate',
       'panthereyes.explain_finding',
       'panthereyes.suggest_remediation',
       'panthereyes.create_policy_exception',
@@ -658,6 +701,26 @@ function readOptionalEnum<const TValues extends readonly string[]>(
     throw new Error(`Invalid tools/call argument '${field}': expected one of ${values.join(', ')}`);
   }
   return value as TValues[number];
+}
+
+function readFailOnStatuses(
+  source: Record<string, unknown>,
+  field: string,
+): Array<'warn' | 'block'> | undefined {
+  const value = source[field];
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(value)) {
+    throw new Error(`Invalid tools/call argument '${field}': expected array`);
+  }
+  const parsed = value.map((entry) => {
+    if (entry !== 'warn' && entry !== 'block') {
+      throw new Error(`Invalid tools/call argument '${field}': expected values 'warn' or 'block'`);
+    }
+    return entry;
+  });
+  return parsed.length > 0 ? parsed : undefined;
 }
 
 function readPhase(source: Record<string, unknown>, field: string): 'static' | 'non-static' {
@@ -861,6 +924,51 @@ function buildComparePolicyEnvsReport(diff: ReturnType<typeof comparePolicyEnvs>
     gate,
     diff,
     markdown: markdownLines.join('\n'),
+  };
+}
+
+function buildScanGateResult(input: {
+  rootDir: string;
+  target: 'web' | 'mobile';
+  phase: 'static' | 'non-static';
+  failOn: Array<'warn' | 'block'>;
+  scanResult: unknown;
+}) {
+  const summary =
+    typeof input.scanResult === 'object' && input.scanResult && 'summary' in input.scanResult
+      ? ((input.scanResult as Record<string, unknown>).summary as Record<string, unknown> | undefined)
+      : undefined;
+  const findings =
+    typeof input.scanResult === 'object' && input.scanResult && 'findings' in input.scanResult
+      ? ((input.scanResult as Record<string, unknown>).findings as unknown[] | undefined)
+      : undefined;
+  const status = summary && typeof summary.status === 'string' ? summary.status : 'unknown';
+  const findingsCount = Array.isArray(findings) ? findings.length : 0;
+
+  const shouldFail =
+    (status === 'block' && input.failOn.includes('block')) || (status === 'warn' && input.failOn.includes('warn'));
+
+  const decision = status === 'block' || status === 'warn' || status === 'pass' ? status : 'warn';
+
+  return {
+    reportType: 'panthereyes.scan_gate',
+    rootDir: input.rootDir,
+    target: input.target,
+    phase: input.phase,
+    scan: {
+      status,
+      findingsCount,
+      summary: summary ?? null,
+    },
+    gate: {
+      decision,
+      failOn: input.failOn,
+      shouldFail,
+      reason: shouldFail
+        ? `Scan status '${status}' matches failOn thresholds (${input.failOn.join(', ')}).`
+        : `Scan status '${status}' does not trigger failOn thresholds (${input.failOn.join(', ')}).`,
+    },
+    raw: input.scanResult,
   };
 }
 
