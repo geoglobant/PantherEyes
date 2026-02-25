@@ -255,10 +255,10 @@ corepack pnpm mcp:up:local
 
 ### MCP client configuration (generic example)
 
-Template in the repo:
+Templates in the repo:
 
-- `docs/examples/codex-vscode-mcp.example.json`
-- `docs/examples/codex-vscode-mcp-npx.example.json` (for future packaged distribution via npm)
+- [`docs/examples/codex-vscode-mcp.example.json`](examples/codex-vscode-mcp.example.json)
+- [`docs/examples/codex-vscode-mcp-npx.example.json`](examples/codex-vscode-mcp-npx.example.json) (for packaged distribution via npm)
 
 Example (adjust the absolute path):
 
@@ -329,7 +329,7 @@ Tradeoffs:
 ### Level 2 (recommended for teams): config template + onboarding script
 
 Standardize:
-- a versioned MCP template (already started with `docs/examples/codex-vscode-mcp.example.json`)
+- a versioned MCP template (already started with [`docs/examples/codex-vscode-mcp.example.json`](examples/codex-vscode-mcp.example.json))
 - an internal onboarding script that:
   - validates `node/corepack/pnpm`
   - runs `pnpm install`
@@ -338,8 +338,8 @@ Standardize:
 This reduces onboarding errors and manual setup.
 
 At this level, keep two templates:
-- local-monorepo wrapper (`docs/examples/codex-vscode-mcp.example.json`)
-- future packaged `npx` config (`docs/examples/codex-vscode-mcp-npx.example.json`)
+- local-monorepo wrapper ([`docs/examples/codex-vscode-mcp.example.json`](examples/codex-vscode-mcp.example.json))
+- packaged `npx` config ([`docs/examples/codex-vscode-mcp-npx.example.json`](examples/codex-vscode-mcp-npx.example.json))
 
 ### Level 3 (more professional): distribute as an internal package/binary
 
@@ -422,7 +422,7 @@ Use this quick guide:
 
 This repo now includes a publish workflow template:
 
-- `.github/workflows/publish-panthereyes-mcp.yml`
+- [`.github/workflows/publish-panthereyes-mcp.yml`](../.github/workflows/publish-panthereyes-mcp.yml)
 
 It supports:
 - `npmjs` publish (recommended for broad developer usage)

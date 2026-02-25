@@ -170,11 +170,11 @@ Quick start:
 ./scripts/mcp/panthereyes-mcp.sh
 ```
 
-See `docs/mcp-local-usage.md` for local setup examples (including Codex in VS Code).
+See [`docs/mcp-local-usage.md`](docs/mcp-local-usage.md) for local setup examples (including Codex in VS Code).
 
 Additional guide (pt-BR, practical usage + team distribution):
 
-- `docs/agent-usage-and-mcp-distribution.md`
+- [`docs/agent-usage-and-mcp-distribution.md`](docs/agent-usage-and-mcp-distribution.md)
 - MCP config template example: `docs/examples/codex-vscode-mcp.example.json`
 - MCP (future npm distribution) template: `docs/examples/codex-vscode-mcp-npx.example.json`
 - MCP publish workflow template: `.github/workflows/publish-panthereyes-mcp.yml`

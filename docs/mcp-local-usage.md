@@ -271,8 +271,8 @@ Example MCP client config snippet (adjust to the exact Codex VS Code MCP setting
 
 Template files in this repo:
 
-- `docs/examples/codex-vscode-mcp.example.json`
-- `docs/examples/codex-vscode-mcp-npx.example.json` (future packaged distribution via npm)
+- [`docs/examples/codex-vscode-mcp.example.json`](examples/codex-vscode-mcp.example.json)
+- [`docs/examples/codex-vscode-mcp-npx.example.json`](examples/codex-vscode-mcp-npx.example.json) (packaged distribution via npm)
 
 Local validation checklist:
 
