@@ -111,6 +111,32 @@ export function createAgentHttpServer(runtime: AgentRuntime, logger: Logger): Se
       return;
     }
 
+    if (req.url === '/tools/schema') {
+      if (req.method !== 'GET') {
+        sendJson(res, 405, { error: 'Method not allowed', allowed: ['GET'] });
+        return;
+      }
+
+      try {
+        const tools = mcpToolHost.listTools();
+        sendJson(res, 200, {
+          schemaVersion: 1,
+          generatedAt: new Date().toISOString(),
+          endpoints: {
+            list: '/tools/list',
+            call: '/tools/call',
+            schema: '/tools/schema',
+          },
+          tools,
+        });
+      } catch (error) {
+        const err = error as Error;
+        requestLogger.error('http.tools.schema.error', { error: err });
+        sendJson(res, 500, { error: err.message });
+      }
+      return;
+    }
+
     if (req.url === '/tools/call') {
       if (req.method !== 'POST') {
         sendJson(res, 405, { error: 'Method not allowed', allowed: ['POST'] });

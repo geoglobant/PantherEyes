@@ -54,3 +54,23 @@ export interface PantherEyesChatResponse {
     error?: { message: string; code?: string };
   }>;
 }
+
+export interface PantherEyesToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: {
+    type: 'object';
+    properties: Record<string, unknown>;
+    required?: string[];
+    additionalProperties?: boolean;
+  };
+}
+
+export interface PantherEyesToolCallResponse {
+  content: Array<
+    | { type: 'text'; text: string }
+    | { type: 'json'; json: unknown }
+  >;
+  structuredContent?: unknown;
+  isError?: boolean;
+}

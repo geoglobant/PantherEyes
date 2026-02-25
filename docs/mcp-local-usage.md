@@ -328,7 +328,15 @@ curl -s http://localhost:4711/tools/call \
 Bridge endpoints:
 
 - `GET /tools/list`
+- `GET /tools/schema`
 - `POST /tools/call`
+
+`/tools/schema` returns a snapshot with:
+
+- `schemaVersion`
+- `generatedAt`
+- `endpoints`
+- `tools` (same tool definitions exposed by `/tools/list`)
 
 ## Related `/chat` intents (agent-server)
 

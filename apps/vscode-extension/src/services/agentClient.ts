@@ -1,7 +1,12 @@
 import * as http from 'node:http';
 import * as https from 'node:https';
 import { URL } from 'node:url';
-import type { PantherEyesChatRequest, PantherEyesChatResponse } from '../types/agent';
+import type {
+  PantherEyesChatRequest,
+  PantherEyesChatResponse,
+  PantherEyesToolCallResponse,
+  PantherEyesToolDefinition,
+} from '../types/agent';
 
 export class PantherEyesAgentClientError extends Error {
   constructor(message: string, public readonly statusCode?: number, public readonly body?: string) {
@@ -14,12 +19,52 @@ export class PantherEyesAgentClient {
   constructor(private readonly endpoint: string) {}
 
   async chat(payload: PantherEyesChatRequest): Promise<PantherEyesChatResponse> {
-    const response = await postJson(this.endpoint, payload);
+    const response = await requestJson('POST', this.endpoint, payload);
     return response as PantherEyesChatResponse;
+  }
+
+  async listTools(): Promise<{ tools: PantherEyesToolDefinition[] }> {
+    const response = await requestJson('GET', this.resolveToolsUrl('/tools/list'));
+    return response as { tools: PantherEyesToolDefinition[] };
+  }
+
+  async getToolsSchema(): Promise<{
+    schemaVersion: number;
+    generatedAt: string;
+    endpoints: { list: string; call: string; schema: string };
+    tools: PantherEyesToolDefinition[];
+  }> {
+    const response = await requestJson('GET', this.resolveToolsUrl('/tools/schema'));
+    return response as {
+      schemaVersion: number;
+      generatedAt: string;
+      endpoints: { list: string; call: string; schema: string };
+      tools: PantherEyesToolDefinition[];
+    };
+  }
+
+  async callTool(name: string, args?: Record<string, unknown>): Promise<PantherEyesToolCallResponse> {
+    const response = await requestJson('POST', this.resolveToolsUrl('/tools/call'), {
+      name,
+      arguments: args,
+    });
+    return response as PantherEyesToolCallResponse;
+  }
+
+  private resolveToolsUrl(pathname: '/tools/list' | '/tools/call' | '/tools/schema'): string {
+    let url: URL;
+    try {
+      url = new URL(this.endpoint);
+    } catch {
+      throw new PantherEyesAgentClientError(`Invalid PantherEyes agent URL: ${this.endpoint}`);
+    }
+    url.pathname = pathname;
+    url.search = '';
+    return url.toString();
   }
 }
 
-function postJson(urlString: string, payload: unknown): Promise<unknown> {
+function requestJson(method: 'GET' | 'POST', urlString: string, payload?: unknown): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let url: URL;
     try {
@@ -29,7 +74,7 @@ function postJson(urlString: string, payload: unknown): Promise<unknown> {
       return;
     }
 
-    const body = JSON.stringify(payload);
+    const body = payload === undefined ? '' : JSON.stringify(payload);
     const transport = url.protocol === 'https:' ? https : http;
 
     const req = transport.request(
@@ -37,12 +82,15 @@ function postJson(urlString: string, payload: unknown): Promise<unknown> {
         protocol: url.protocol,
         hostname: url.hostname,
         port: url.port ? Number(url.port) : url.protocol === 'https:' ? 443 : 80,
-        method: 'POST',
+        method,
         path: `${url.pathname}${url.search}`,
-        headers: {
-          'content-type': 'application/json',
-          'content-length': Buffer.byteLength(body),
-        },
+        headers:
+          method === 'POST'
+            ? {
+                'content-type': 'application/json',
+                'content-length': Buffer.byteLength(body),
+              }
+            : undefined,
       },
       (res) => {
         const chunks: Buffer[] = [];
@@ -72,7 +120,9 @@ function postJson(urlString: string, payload: unknown): Promise<unknown> {
       reject(new PantherEyesAgentClientError(`Could not reach PantherEyes agent at ${urlString}: ${error.message}`));
     });
 
-    req.write(body);
+    if (method === 'POST') {
+      req.write(body);
+    }
     req.end();
   });
 }

@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import { PantherEyesChatPanel } from '../chat/chatPanel';
+import { PantherEyesAgentClient, PantherEyesAgentClientError } from '../services/agentClient';
 import { PantherEyesAgentRuntimeManager } from '../services/agentRuntimeManager';
 import { PantherEyesSecretStore, type LlmProvider } from '../services/secretStore';
-import { getConfiguredEnv, getConfiguredTarget, getPrimaryWorkspacePath } from '../util/workspace';
+import { getAgentServerUrl, getConfiguredEnv, getConfiguredTarget, getPrimaryWorkspacePath } from '../util/workspace';
 
 interface RegisterCommandDeps {
   context: vscode.ExtensionContext;
@@ -55,16 +56,67 @@ export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[]
   const validateSecurityConfig = vscode.commands.registerCommand(
     'panthereyes.validateSecurityConfig',
     async () => {
-      void agentRuntime.ensureAgentReady({ interactive: false, reason: 'validateSecurityConfig-command' });
-      const env = getConfiguredEnv();
-      const target = getConfiguredTarget();
-      showPanel({
-        message: `Validate security config and summarize warnings for ${env}/${target}`,
-        intent: 'generate_policy_tests',
-        env,
-        target,
-        autoSend: true,
-      });
+      const ready = await agentRuntime.ensureAgentReady({ interactive: true, reason: 'validateSecurityConfig-command' });
+      if (!ready) {
+        return;
+      }
+
+      const workspacePath = getPrimaryWorkspacePath();
+      if (!workspacePath) {
+        await vscode.window.showErrorMessage('Open a workspace folder before validating PantherEyes config.');
+        return;
+      }
+
+      const client = new PantherEyesAgentClient(getAgentServerUrl());
+      try {
+        const result = await client.callTool('panthereyes.validate_security_config', {
+          rootDir: workspacePath,
+        });
+        const structured = (result.structuredContent ?? {}) as {
+          valid?: boolean;
+          counts?: { environments?: number; rules?: number; exceptions?: number };
+          warnings?: string[];
+        };
+        const warnings = Array.isArray(structured.warnings) ? structured.warnings.length : 0;
+        const counts = structured.counts ?? {};
+        const message = `PantherEyes config ${structured.valid === false ? 'invalid' : 'validated'}: envs=${counts.environments ?? 0}, rules=${counts.rules ?? 0}, exceptions=${counts.exceptions ?? 0}, warnings=${warnings}`;
+        void vscode.window.showInformationMessage(message, 'Open Chat').then((choice) => {
+          if (choice === 'Open Chat') {
+            const env = getConfiguredEnv();
+            const target = getConfiguredTarget();
+            showPanel({
+              message: `Validate security config and summarize warnings for ${env}/${target}`,
+              intent: 'generate_policy_tests',
+              env,
+              target,
+              autoSend: true,
+            });
+          }
+        });
+      } catch (error) {
+        const err = error as Error;
+        const details = error instanceof PantherEyesAgentClientError ? error.body : undefined;
+        const selected = await vscode.window.showErrorMessage(
+          `PantherEyes config validation failed: ${err.message}`,
+          'Fallback to Chat',
+        );
+        if (selected === 'Fallback to Chat') {
+          const env = getConfiguredEnv();
+          const target = getConfiguredTarget();
+          showPanel({
+            message: `Validate security config and summarize warnings for ${env}/${target}`,
+            intent: 'generate_policy_tests',
+            env,
+            target,
+            autoSend: true,
+          });
+        }
+        if (details) {
+          const channel = vscode.window.createOutputChannel('PantherEyes Agent');
+          channel.appendLine(details);
+          channel.show(true);
+        }
+      }
     },
   );
 

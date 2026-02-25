@@ -92,6 +92,34 @@ test('http tools bridge lists MCP tools', async (t) => {
   }
 });
 
+test('http tools bridge exposes schema snapshot', async (t) => {
+  let started: Awaited<ReturnType<typeof startEphemeralServer>>;
+  try {
+    started = await startEphemeralServer();
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code === 'EPERM' || err.code === 'EACCES') {
+      t.skip(`Local socket bind blocked in this environment: ${err.code}`);
+      return;
+    }
+    throw error;
+  }
+
+  try {
+    const response = await httpJson<{
+      schemaVersion: number;
+      endpoints: { schema: string; list: string; call: string };
+      tools: Array<{ name: string }>;
+    }>(started.port, 'GET', '/tools/schema');
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.json.schemaVersion, 1);
+    assert.equal(response.json.endpoints.schema, '/tools/schema');
+    assert.equal(response.json.tools.some((tool) => tool.name === 'panthereyes.scan_gate_report'), true);
+  } finally {
+    started.server.close();
+  }
+});
+
 test('http tools bridge can call scan_gate tool', async (t) => {
   let started: Awaited<ReturnType<typeof startEphemeralServer>>;
   try {
@@ -148,4 +176,3 @@ test('http tools bridge validates payload shape', async (t) => {
     started.server.close();
   }
 });
-
