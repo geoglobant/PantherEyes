@@ -1,70 +1,70 @@
-# PantherEyes Agent: Usage Guide and MCP Distribution (pt-BR)
+# PantherEyes Agent: Usage Guide and MCP Distribution
 
-Este guia mostra **todas as formas de uso do PantherEyes Agent** no monorepo e como **distribuir o MCP** para outros devs no time.
+This guide covers **all supported ways to use the PantherEyes Agent** in the monorepo and how to **distribute the MCP setup** to other developers on your team.
 
-## 1. Visão geral: formas de usar o agente
+## 1. Overview: ways to use the agent
 
-O PantherEyes Agent pode ser usado por múltiplas interfaces (sem conflito entre si):
+The PantherEyes Agent can be used through multiple interfaces (without conflict):
 
 1. `HTTP /chat`
-   - uso humano/conversacional
-   - intents/planners (ex.: `generate_policy_tests`, `explain_finding`)
+   - human/conversational usage
+   - intents/planners (for example: `generate_policy_tests`, `explain_finding`)
 2. `HTTP /tools/*`
-   - uso determinístico e estruturado (CI/CD, scripts, automações)
+   - deterministic, structured usage (CI/CD, scripts, automation)
    - endpoints: `/tools/list`, `/tools/schema`, `/tools/call`
 3. `MCP (stdio)`
-   - integração com Codex / Claude / clientes MCP
-   - expõe tools PantherEyes de forma nativa
+   - integration with Codex / Claude / MCP-capable clients
+   - exposes PantherEyes tools natively
 4. `VS Code Extension`
-   - UX no editor (chat + tools bridge + preview de ChangeSet)
+   - editor UX (chat + tools bridge + ChangeSet preview)
 
-Arquitetura (resumo):
+Architecture (summary):
 
-- **Core de tools/planners** = lógica única
-- **HTTP bridge** = adapter para CI/scripts
-- **MCP** = adapter para assistentes
-- **VS Code extension** = UI de desenvolvimento
+- **Core tools/planners** = single source of logic
+- **HTTP bridge** = adapter for CI/scripts
+- **MCP** = adapter for assistants
+- **VS Code extension** = development UI
 
-## 2. Pré-requisitos
+## 2. Prerequisites
 
 - Node.js 20+
-- `corepack` habilitado
+- `corepack` enabled
 - `pnpm` (via corepack)
-- Rust (para CLI/checks quando necessário)
-- `jq` (recomendado para scripts/CI local)
+- Rust (for CLI/checks when needed)
+- `jq` (recommended for scripts/local CI)
 
-Instalar dependências:
+Install dependencies:
 
 ```bash
 corepack pnpm install
 ```
 
-## 3. Subir o Agent Server (HTTP)
+## 3. Start the Agent Server (HTTP)
 
-Da raiz do monorepo:
+From the monorepo root:
 
 ```bash
 corepack pnpm agent:up
 ```
 
-Por padrão (script da raiz), o agent sobe em:
+By default (root script), the agent runs on:
 
 - `http://localhost:4711`
 
-Validar healthcheck:
+Validate the healthcheck:
 
 ```bash
 curl -s http://localhost:4711/health
 ```
 
-## 4. Usar via `/chat` (conversacional)
+## 4. Use via `/chat` (conversational)
 
-Uso recomendado para:
-- prompts humanos
+Recommended for:
+- human prompts
 - planners/intents
-- geração/explicação com contexto
+- generation/explanation with context
 
-Exemplo (`compare_policy_envs`):
+Example (`compare_policy_envs`):
 
 ```bash
 curl -s http://localhost:4711/chat \
@@ -79,13 +79,13 @@ curl -s http://localhost:4711/chat \
   }' | jq .
 ```
 
-Exemplo (`create_policy_exception` -> `ChangeSet` dry-run):
+Example (`create_policy_exception` -> dry-run `ChangeSet`):
 
 ```bash
 curl -s http://localhost:4711/chat \
   -H 'content-type: application/json' \
   -d '{
-    "message": "criar excecao para IOS-ATS-001 em dev com aprovacao security-team",
+    "message": "create exception for IOS-ATS-001 in dev approved by security-team",
     "intent": "create_policy_exception",
     "context": {
       "rootDir": "samples/ios-panthereyes-demo",
@@ -95,29 +95,29 @@ curl -s http://localhost:4711/chat \
   }' | jq .
 ```
 
-## 5. Usar via `/tools/*` (determinístico / CI / automação)
+## 5. Use via `/tools/*` (deterministic / CI / automation)
 
-Uso recomendado para:
+Recommended for:
 - CI/CD
-- scripts shell
-- automações previsíveis
-- integrações internas sem MCP
+- shell scripts
+- predictable automation
+- internal integrations without MCP
 
-### Listar tools
+### List tools
 
 ```bash
 curl -s http://localhost:4711/tools/list | jq .
 ```
 
-### Ver schema das tools
+### View tools schema
 
 ```bash
 curl -s http://localhost:4711/tools/schema | jq .
 ```
 
-### Chamar uma tool
+### Call a tool
 
-Exemplo: `scan_gate_report`
+Example: `scan_gate_report`
 
 ```bash
 curl -s http://localhost:4711/tools/call \
@@ -134,13 +134,58 @@ curl -s http://localhost:4711/tools/call \
   }' | jq .
 ```
 
-### Wrapper de CI/CD local (recomendado)
+### Usage by project type (mobile / web / CI/CD)
 
-Script já incluído:
+#### Mobile project (Android/iOS repo)
+
+Use `target: "mobile"` and point `rootDir` to the mobile app repo:
+
+```bash
+curl -s http://localhost:4711/tools/call \
+  -H 'content-type: application/json' \
+  -d '{
+    "name": "panthereyes.scan_gate_report",
+    "arguments": {
+      "rootDir": "/path/to/mobile-app",
+      "target": "mobile",
+      "phase": "static",
+      "failOn": ["block"],
+      "format": "both"
+    }
+  }' | jq .
+```
+
+#### Web project (site/web app repo)
+
+Use `target: "web"`:
+
+```bash
+curl -s http://localhost:4711/tools/call \
+  -H 'content-type: application/json' \
+  -d '{
+    "name": "panthereyes.scan_gate_report",
+    "arguments": {
+      "rootDir": "/path/to/web-app",
+      "target": "web",
+      "phase": "static",
+      "failOn": ["block"],
+      "format": "both"
+    }
+  }' | jq .
+```
+
+#### CI/CD pipeline
+
+Use the HTTP tools bridge wrapper (`scripts/ci/panthereyes-gate.sh`) or the composite action (`.github/actions/panthereyes-gate/action.yml`).
+The HTTP bridge is the recommended CI interface because it returns structured gate decisions and markdown/json reports.
+
+### Local CI/CD wrapper (recommended)
+
+Included script:
 
 - `scripts/ci/panthereyes-gate.sh`
 
-Executar:
+Run it:
 
 ```bash
 # terminal 1
@@ -150,71 +195,72 @@ corepack pnpm agent:up
 ./scripts/ci/panthereyes-gate.sh --root-dir . --target web --phase static
 ```
 
-Também disponível via script da raiz:
+Also available from the root script:
 
 ```bash
 corepack pnpm agent:ci:gate -- --root-dir . --target web --phase static
 ```
 
-Artefatos gerados (JSON):
+Generated artifacts (JSON):
 
 - `artifacts/panthereyes/config-validation.json`
 - `artifacts/panthereyes/scan-gate.json`
 - `artifacts/panthereyes/scan-gate-report.json`
-- `artifacts/panthereyes/policy-diff-report.json` (se não usar `--skip-policy-diff`)
+- `artifacts/panthereyes/policy-diff-report.json` (unless `--skip-policy-diff` is used)
 
-## 6. Usar via extensão VS Code (UX no editor)
+## 6. Use via the VS Code extension (editor UX)
 
-Fluxo recomendado para dev:
+Recommended developer flow:
 
-1. Instale a extensão PantherEyes (`.vsix`) ou rode em dev (`F5`)
-2. Garanta que o agent está disponível (a extensão também tenta auto-start local)
-3. Abra o Command Palette:
+1. Install the PantherEyes extension (`.vsix`) or run it in dev mode (`F5`)
+2. Ensure the agent is available (the extension also attempts local auto-start)
+3. Open the Command Palette:
    - `PantherEyes: Ask Agent`
    - `PantherEyes: Run Scan`
    - `PantherEyes: Preview Policy Diff`
    - `PantherEyes: Show Tools Schema`
 
-O painel webview suporta:
+The webview panel supports:
 - chat (`/chat`)
 - tools bridge (`/tools/call`)
-- preview de `ChangeSet`
+- `ChangeSet` preview
 - `Apply ChangeSet`
-- `Review & Apply` por arquivo
-- form helper baseado em `/tools/schema`
+- `Review & Apply` per file
+- schema-based form helper from `/tools/schema`
 
-## 7. Usar via MCP (Codex / VS Code / outros clientes MCP)
+## 7. Use via MCP (Codex / VS Code / other MCP clients)
 
-Uso recomendado para:
+Recommended for:
 - Codex
 - Claude Desktop
-- assistentes com suporte a MCP
+- assistants with MCP support
 
-### Wrapper MCP local (recomendado)
+### Local MCP wrapper (recommended)
 
-Script já incluído:
+Included script:
 
 - `scripts/mcp/panthereyes-mcp.sh`
 
-Executar manualmente (teste):
+Run manually (test):
 
 ```bash
 ./scripts/mcp/panthereyes-mcp.sh
 ```
 
-Ou via script da raiz:
+Or via root script:
 
 ```bash
 corepack pnpm mcp:up:local
 ```
 
-### Configuração do cliente MCP (exemplo genérico)
+### MCP client configuration (generic example)
 
-Template no repo:
+Template in the repo:
 
 - `docs/examples/codex-vscode-mcp.example.json`
+- `docs/examples/codex-vscode-mcp-npx.example.json` (for future packaged distribution via npm)
 
-Exemplo (ajuste o caminho absoluto):
+Example (adjust the absolute path):
 
 ```json
 {
@@ -231,117 +277,205 @@ Exemplo (ajuste o caminho absoluto):
 }
 ```
 
-Depois:
-1. salve a configuração MCP no cliente
-2. reinicie o Codex/VS Code
-3. peça para chamar uma tool PantherEyes (ex.: `panthereyes.scan_gate_report`)
+Then:
+1. save the MCP configuration in the client
+2. restart Codex/VS Code
+3. ask it to call a PantherEyes tool (for example `panthereyes.scan_gate_report`)
 
-## 8. Como distribuir o MCP para outros devs (time)
+### Source-free distribution (npm)
 
-Existem 3 níveis de maturidade. Recomendo começar pelo **Nível 1** e evoluir.
+Target package name:
 
-### Nível 1 (rápido e prático): distribuir via repo + wrapper script
+- `@georgemichelon/panthereyes-mcp`
 
-Cada dev:
-1. clona o repo `PantherEyes`
-2. roda `corepack pnpm install`
-3. configura o cliente MCP apontando para:
+MCP client configuration (once the package is published):
+
+```json
+{
+  "mcpServers": {
+    "panthereyes": {
+      "command": "npx",
+      "args": ["-y", "@georgemichelon/panthereyes-mcp"]
+    }
+  }
+}
+```
+
+Current note:
+- the package exists in the monorepo as a launcher package and supports bundled runtime generation
+- `prepack` builds the runtime bundle that will be shipped in the published package
+
+## 8. How to distribute the MCP to other developers (team)
+
+There are 3 maturity levels. Recommended path: start with **Level 1** and evolve.
+
+### Level 1 (fast and practical): distribute through the repo + wrapper script
+
+Each developer:
+1. clones the `PantherEyes` repo
+2. runs `corepack pnpm install`
+3. configures the MCP client to point to:
    - `scripts/mcp/panthereyes-mcp.sh`
 
-Vantagens:
-- simples
-- reaproveita scripts versionados
-- funciona hoje
+Advantages:
+- simple
+- reuses versioned scripts
+- works today
 
-Cuidados:
-- caminho absoluto muda por máquina
-- cada dev precisa dependências locais
+Tradeoffs:
+- absolute path differs per machine
+- each developer needs local dependencies
 
-### Nível 2 (recomendado para time): config template + onboarding script
+### Level 2 (recommended for teams): config template + onboarding script
 
-Padronize:
-- um template MCP versionado (já começamos com `docs/examples/codex-vscode-mcp.example.json`)
-- um script de onboarding interno que:
-  - valida `node/corepack/pnpm`
-  - roda `pnpm install`
-  - imprime o snippet com o caminho local do dev
+Standardize:
+- a versioned MCP template (already started with `docs/examples/codex-vscode-mcp.example.json`)
+- an internal onboarding script that:
+  - validates `node/corepack/pnpm`
+  - runs `pnpm install`
+  - prints the MCP snippet with the developer's local path
 
-Isso reduz erro de configuração e onboarding manual.
+This reduces onboarding errors and manual setup.
 
-### Nível 3 (mais profissional): distribuição como pacote/binário interno
+At this level, keep two templates:
+- local-monorepo wrapper (`docs/examples/codex-vscode-mcp.example.json`)
+- future packaged `npx` config (`docs/examples/codex-vscode-mcp-npx.example.json`)
 
-Opções:
+### Level 3 (more professional): distribute as an internal package/binary
 
-1. **Pacote interno (npm)**
-   - publicar um package que expose um launcher MCP (`panthereyes-mcp`)
-   - cliente MCP usa `command: "panthereyes-mcp"`
+Options:
 
-2. **Binário/container**
-   - empacotar o MCP num binário ou Docker image
-   - útil para ambientes padronizados/CI
+1. **Internal npm package**
+   - publish a package that exposes an MCP launcher (`panthereyes-mcp`)
+   - MCP clients use `command: "panthereyes-mcp"`
 
-3. **Release interna versionada**
-   - zip/tar com `dist` + wrapper + docs
-   - dev baixa uma versão pinada
+2. **Binary/container**
+   - package the MCP as a binary or Docker image
+   - useful for standardized environments/CI
 
-Vantagens:
-- menos dependência do monorepo completo
-- versionamento mais controlado
-- onboarding mais previsível
+3. **Versioned internal release**
+   - zip/tar with `dist` + wrapper + docs
+   - developers download a pinned version
 
-### Recomendação de governança (importante)
+Advantages:
+- less dependency on the full monorepo
+- more controlled versioning
+- more predictable onboarding
 
-Para evitar “funciona na máquina A mas não na B”:
+### Governance recommendations (important)
 
-1. **Pinar versão**
-   - use tag/branch/release estável do PantherEyes para o time
-2. **Congelar contrato**
-   - `/tools/schema` deve refletir o que o MCP expõe
-3. **Documentar mudanças**
-   - changelog curto para tools adicionadas/alteradas
-4. **Fornecer template por cliente**
+To avoid “works on machine A but not B”:
+
+1. **Pin versions**
+   - use a stable tag/branch/release of PantherEyes for the team
+2. **Freeze contracts**
+   - `/tools/schema` should mirror what MCP exposes
+3. **Document changes**
+   - short changelog for added/changed tools
+4. **Provide templates per client**
    - Codex VS Code
    - Claude Desktop
-   - outros MCP clients usados no time
+   - other MCP clients used by the team
 
-## 9. Qual interface usar em cada cenário?
+## 9. Which interface should I use in each scenario?
 
-Use este guia:
+Use this quick guide:
 
-1. **Dev quer conversar e iterar** -> extensão VS Code (`/chat` + `/tools/*`)
+1. **Developer wants to chat and iterate** -> VS Code extension (`/chat` + `/tools/*`)
 2. **CI/CD / GitHub Actions** -> `/tools/*` (HTTP bridge)
-3. **Codex/Claude como copiloto com tools** -> MCP
-4. **Scan local rápido sem agent** -> CLI Rust (`panthereyes`)
+3. **Codex/Claude as copilots with tools** -> MCP
+4. **Fast local scan without agent** -> Rust CLI (`panthereyes`)
 
-## 10. Troubleshooting rápido
+## 10. Quick troubleshooting
 
-### Agent HTTP não responde (`/health`)
-- confirme `corepack pnpm agent:up`
-- valide porta `4711`
-- confira logs no terminal do agent
+### Agent HTTP does not respond (`/health`)
+- confirm `corepack pnpm agent:up`
+- validate port `4711`
+- check agent logs in the terminal
 
-### `/tools/call` retorna erro de schema/args
-- consulte `GET /tools/schema`
-- valide JSON enviado em `arguments`
+### `/tools/call` returns schema/args error
+- check `GET /tools/schema`
+- validate the JSON sent in `arguments`
 
-### Cliente MCP não “vê” as tools
-- confira caminho absoluto do wrapper `scripts/mcp/panthereyes-mcp.sh`
-- reinicie o cliente após alterar config MCP
-- teste o wrapper manualmente no terminal
+### MCP client does not “see” the tools
+- verify the absolute path to `scripts/mcp/panthereyes-mcp.sh`
+- restart the client after changing MCP config
+- test the wrapper manually in a terminal
 
-### VS Code extensão não mostra comandos PantherEyes
-- confirmar extensão instalada (ou `F5` em modo dev)
+### VS Code extension does not show PantherEyes commands
+- confirm extension is installed (or `F5` in dev mode)
 - `Developer: Reload Window`
 - `PantherEyes: Agent Status`
 
-### CI wrapper falha mesmo com agent rodando
-- testar `curl http://localhost:4711/health`
-- verificar `jq`
-- revisar `--target` (`web|mobile`) e `--phase` (`static|non-static`)
+### CI wrapper fails even when agent is running
+- test `curl http://localhost:4711/health`
+- verify `jq`
+- review `--target` (`web|mobile`) and `--phase` (`static|non-static`)
 
-## 11. Próximos passos sugeridos para o time
+## 11. Suggested next steps for the team
 
-1. Publicar um guia MCP específico do cliente Codex adotado internamente
-2. Criar workflow reusable (`workflow_call`) baseado em `.github/actions/panthereyes-gate`
-3. Empacotar MCP em distribuição interna (package/binário) para onboarding simplificado
+1. Publish a Codex-client-specific MCP guide for the internal environment
+2. Create a reusable workflow (`workflow_call`) based on `.github/actions/panthereyes-gate`
+3. Package MCP into an internal distribution (package/binary) for simpler onboarding
 
+## 12. Publishing `@georgemichelon/panthereyes-mcp` (workflow template)
+
+This repo now includes a publish workflow template:
+
+- `.github/workflows/publish-panthereyes-mcp.yml`
+
+It supports:
+- `npmjs` publish (recommended for broad developer usage)
+- `GitHub Packages` publish (requires package scope alignment with GitHub owner namespace)
+- `dry_run` mode (pack + validate only)
+
+### Required secrets
+
+For npmjs:
+- `NPM_TOKEN`
+
+For GitHub Packages:
+- `GITHUB_TOKEN` (usually enough for same-repo owner scope), or
+- `GH_PACKAGES_TOKEN` (if you prefer a dedicated PAT)
+
+### Run as dry-run (recommended first)
+
+Use `workflow_dispatch` with:
+- `registry = npmjs`
+- `dry_run = true`
+
+This will:
+1. build the PantherEyes runtime dependencies
+2. prepare the bundled MCP runtime (`prepack`)
+3. generate the tarball
+4. upload the tarball as a workflow artifact
+
+### Publish to npmjs
+
+Use `workflow_dispatch` with:
+- `registry = npmjs`
+- `tag = latest` (or another dist-tag)
+- `dry_run = false`
+
+### Publish to GitHub Packages
+
+If publishing to GitHub Packages, the package scope must match the GitHub namespace (owner/org).
+
+Because the package name is currently:
+
+- `@georgemichelon/panthereyes-mcp`
+
+you will typically need to set:
+- `package_name_override = @<github-owner>/panthereyes-mcp`
+
+Example:
+- `@geoglobant/panthereyes-mcp`
+
+### Local validation before publishing (recommended)
+
+```bash
+corepack pnpm agent:build
+corepack pnpm --filter @georgemichelon/panthereyes-mcp run bundle:prepare
+corepack pnpm --filter @georgemichelon/panthereyes-mcp run doctor
+cd packages/panthereyes-mcp && npm_config_cache=/tmp/panthereyes-npm-cache npm pack --dry-run
+```

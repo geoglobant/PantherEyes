@@ -269,9 +269,10 @@ Example MCP client config snippet (adjust to the exact Codex VS Code MCP setting
 }
 ```
 
-Template file in this repo:
+Template files in this repo:
 
 - `docs/examples/codex-vscode-mcp.example.json`
+- `docs/examples/codex-vscode-mcp-npx.example.json` (future packaged distribution via npm)
 
 Local validation checklist:
 
@@ -284,6 +285,21 @@ Recommended first tool call for testing (samples):
 
 - `panthereyes.validate_security_config` with `rootDir: "samples/ios-panthereyes-demo"`
 - `panthereyes.scan_gate_report` with `target: "mobile"` and `phase: "static"`
+
+## npm distribution name (source-free install)
+
+Package name for source-free installation:
+
+- `@georgemichelon/panthereyes-mcp`
+
+The monorepo now includes an initial launcher package with this name under:
+
+- `packages/panthereyes-mcp`
+
+Current status:
+- launcher package works in monorepo/local mode
+- bundled runtime packaging is implemented via `prepack` / `bundle:prepare`
+- after publishing, developers can use `npx @georgemichelon/panthereyes-mcp` without the source code
 
 `claude_desktop_config.json` (example shape used by Claude Desktop; adjust path to your machine):
 

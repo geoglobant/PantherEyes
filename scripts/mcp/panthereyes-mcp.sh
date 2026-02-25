@@ -9,5 +9,4 @@ cd "$REPO_ROOT"
 # Allow callers (Codex/VS Code MCP clients) to override env, but default to local deterministic mode.
 export PANTHEREYES_ENABLE_LLM_ROUTER="${PANTHEREYES_ENABLE_LLM_ROUTER:-0}"
 
-exec corepack pnpm mcp:up
-
+exec corepack pnpm --filter @georgemichelon/panthereyes-mcp exec panthereyes-mcp

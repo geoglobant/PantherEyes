@@ -176,3 +176,5 @@ Additional guide (pt-BR, practical usage + team distribution):
 
 - `docs/agent-usage-and-mcp-distribution.md`
 - MCP config template example: `docs/examples/codex-vscode-mcp.example.json`
+- MCP (future npm distribution) template: `docs/examples/codex-vscode-mcp-npx.example.json`
+- MCP publish workflow template: `.github/workflows/publish-panthereyes-mcp.yml`

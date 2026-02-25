@@ -1,0 +1,30 @@
+{
+  "name": "@georgemichelon/panthereyes-mcp",
+  "version": "0.1.0",
+  "description": "PantherEyes MCP launcher for local/Codex/VS Code integration.",
+  "type": "commonjs",
+  "bin": {
+    "panthereyes-mcp": "bin/panthereyes-mcp.cjs"
+  },
+  "files": [
+    "bin",
+    "runtime",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/prepare-bundle.cjs",
+    "typecheck": "node -e \"console.log('No typecheck for launcher package')\"",
+    "bundle:prepare": "node scripts/prepare-bundle.cjs",
+    "bundle:clean": "node -e \"require('node:fs').rmSync('runtime',{recursive:true,force:true}); console.log('Removed runtime bundle (if present).')\"",
+    "doctor": "node bin/panthereyes-mcp.cjs --doctor",
+    "help": "node bin/panthereyes-mcp.cjs --help",
+    "prepack": "node scripts/prepare-bundle.cjs"
+  },
+  "keywords": [
+    "panthereyes",
+    "mcp",
+    "codex",
+    "security"
+  ],
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,153 @@
+name: Publish PantherEyes MCP Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: "Target registry"
+        required: true
+        default: "npmjs"
+        type: choice
+        options:
+          - npmjs
+          - github
+      package_name_override:
+        description: "Optional package name override (recommended for GitHub Packages scope alignment, e.g. @geoglobant/panthereyes-mcp)"
+        required: false
+        default: ""
+        type: string
+      tag:
+        description: "Optional dist-tag (npm publish --tag <tag>)"
+        required: false
+        default: "latest"
+        type: string
+      dry_run:
+        description: "Run pack/validation but skip publish"
+        required: true
+        default: true
+        type: boolean
+  push:
+    tags:
+      - "panthereyes-mcp-v*"
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: publish-panthereyes-mcp-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish @georgemichelon/panthereyes-mcp
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE_DIR: packages/panthereyes-mcp
+      DEFAULT_PACKAGE_NAME: "@georgemichelon/panthereyes-mcp"
+      REGISTRY_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.registry || 'npmjs' }}
+      TAG_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'latest' }}
+      DRY_RUN_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+      PACKAGE_NAME_OVERRIDE_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.package_name_override || '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Build PantherEyes agent/runtime dependencies
+        run: corepack pnpm agent:build
+
+      - name: Prepare MCP package metadata (optional override)
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG_JSON="${PACKAGE_DIR}/package.json"
+          if [[ -n "${PACKAGE_NAME_OVERRIDE_INPUT}" ]]; then
+            echo "Overriding MCP package name to ${PACKAGE_NAME_OVERRIDE_INPUT}"
+            node -e "const fs=require('node:fs'); const p='${PKG_JSON}'; const j=JSON.parse(fs.readFileSync(p,'utf8')); j.name='${PACKAGE_NAME_OVERRIDE_INPUT}'; fs.writeFileSync(p, JSON.stringify(j,null,2)+'\n');"
+          fi
+          echo "package_name=$(node -p \"require('./${PACKAGE_DIR}/package.json').name\")" >> "$GITHUB_ENV"
+
+      - name: Validate package launcher (doctor)
+        run: node packages/panthereyes-mcp/bin/panthereyes-mcp.cjs --doctor
+
+      - name: Pack MCP tarball (prepack builds bundled runtime)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/npm
+          pushd "${PACKAGE_DIR}" >/dev/null
+          npm_config_cache=/tmp/panthereyes-npm-cache npm pack --json > ../../artifacts/npm/panthereyes-mcp-pack.json
+          popd >/dev/null
+          cat artifacts/npm/panthereyes-mcp-pack.json
+          TARBALL="$(node -e "const fs=require('node:fs');const data=JSON.parse(fs.readFileSync('artifacts/npm/panthereyes-mcp-pack.json','utf8'));process.stdout.write(data[0].filename);")"
+          mv "${PACKAGE_DIR}/${TARBALL}" "artifacts/npm/${TARBALL}"
+          echo "mcp_tarball=${TARBALL}" >> "$GITHUB_ENV"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: panthereyes-mcp-package
+          path: |
+            artifacts/npm/*.tgz
+            artifacts/npm/panthereyes-mcp-pack.json
+
+      - name: Configure npmjs registry
+        if: env.REGISTRY_INPUT == 'npmjs'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Configure GitHub Packages registry
+        if: env.REGISTRY_INPUT == 'github'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: "@${{ github.repository_owner }}"
+
+      - name: Publish to npmjs
+        if: env.REGISTRY_INPUT == 'npmjs' && env.DRY_RUN_INPUT != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN" || (echo "NPM_TOKEN secret is required" && exit 1)
+          npm_config_cache=/tmp/panthereyes-npm-cache npm publish "artifacts/npm/${mcp_tarball}" --access public --tag "${TAG_INPUT}" --provenance
+
+      - name: Publish to GitHub Packages
+        if: env.REGISTRY_INPUT == 'github' && env.DRY_RUN_INPUT != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN != '' && secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN" || (echo "GH_PACKAGES_TOKEN or GITHUB_TOKEN is required" && exit 1)
+          echo "Publishing package ${package_name} to GitHub Packages"
+          echo "Note: package scope must match the GitHub owner/namespace for GitHub Packages."
+          npm_config_cache=/tmp/panthereyes-npm-cache npm publish "artifacts/npm/${mcp_tarball}" --registry https://npm.pkg.github.com --tag "${TAG_INPUT}"
+
+      - name: Workflow summary
+        shell: bash
+        run: |
+          {
+            echo "## PantherEyes MCP Publish"
+            echo ""
+            echo "- Registry: \`${REGISTRY_INPUT}\`"
+            echo "- Package: \`${package_name}\`"
+            echo "- Tarball: \`${mcp_tarball}\`"
+            echo "- Dry run: \`${DRY_RUN_INPUT}\`"
+            if [[ "${REGISTRY_INPUT}" == "github" ]]; then
+              echo "- Note: GitHub Packages requires package scope alignment with the owner namespace."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
