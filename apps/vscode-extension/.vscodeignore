@@ -1,0 +1,10 @@
+src/**
+tsconfig.json
+.eslintrc*
+.eslintignore
+.prettier*
+README.dev.md
+**/*.map
+node_modules/**
+!dist/**
+!media/**

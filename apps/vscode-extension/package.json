@@ -4,15 +4,22 @@
   "description": "VS Code extension scaffold for PantherEyes security feedback.",
   "version": "0.1.0",
   "publisher": "panthereyes",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geoglobant/PantherEyes.git",
+    "directory": "apps/vscode-extension"
+  },
   "engines": {
     "vscode": "^1.95.0"
   },
   "categories": ["Linters", "Other"],
   "activationEvents": [
+    "onStartupFinished",
     "onCommand:panthereyes.askAgent",
     "onCommand:panthereyes.validateSecurityConfig",
     "onCommand:panthereyes.runScan",
-    "onCommand:panthereyes.setLlmProvider"
+    "onCommand:panthereyes.setLlmProvider",
+    "onCommand:panthereyes.agentStatus"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -23,6 +30,11 @@
           "type": "string",
           "default": "http://localhost:4711/chat",
           "description": "PantherEyes agent-server /chat endpoint."
+        },
+        "panthereyes.autoStartLocalAgent": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start/connect to a local PantherEyes agent when the endpoint is localhost."
         },
         "panthereyes.defaultEnv": {
           "type": "string",
@@ -53,6 +65,10 @@
       {
         "command": "panthereyes.setLlmProvider",
         "title": "PantherEyes: Set LLM Provider"
+      },
+      {
+        "command": "panthereyes.agentStatus",
+        "title": "PantherEyes: Agent Status"
       }
     ]
   },
@@ -60,9 +76,11 @@
     "build": "tsc -p tsconfig.json",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "vscode:prepublish": "pnpm run build"
+    "vscode:prepublish": "corepack pnpm run build",
+    "package:vsix": "corepack pnpm run build && npx @vscode/vsce package --out panthereyes-vscode-extension.vsix"
   },
   "devDependencies": {
-    "@types/vscode": "^1.95.0"
+    "@types/vscode": "^1.95.0",
+    "@vscode/vsce": "^3.6.2"
   }
 }

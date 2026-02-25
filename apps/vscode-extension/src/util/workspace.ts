@@ -22,3 +22,7 @@ export function getAgentServerUrl(): string {
     .getConfiguration('panthereyes')
     .get<string>('agentServerUrl', 'http://localhost:4711/chat');
 }
+
+export function getConfiguredAutoStartLocalAgent(): boolean {
+  return vscode.workspace.getConfiguration('panthereyes').get<boolean>('autoStartLocalAgent', true);
+}

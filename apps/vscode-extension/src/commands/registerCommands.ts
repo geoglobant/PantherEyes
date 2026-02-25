@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
 import { PantherEyesChatPanel } from '../chat/chatPanel';
+import { PantherEyesAgentRuntimeManager } from '../services/agentRuntimeManager';
 import { PantherEyesSecretStore, type LlmProvider } from '../services/secretStore';
 import { getConfiguredEnv, getConfiguredTarget, getPrimaryWorkspacePath } from '../util/workspace';
 
 interface RegisterCommandDeps {
   context: vscode.ExtensionContext;
   secretStore: PantherEyesSecretStore;
+  agentRuntime: PantherEyesAgentRuntimeManager;
 }
 
 async function pickTarget(defaultTarget: 'web' | 'mobile'): Promise<'web' | 'mobile' | undefined> {
@@ -40,18 +42,20 @@ async function pickProvider(current: LlmProvider): Promise<LlmProvider | undefin
 }
 
 export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[] {
-  const { context, secretStore } = deps;
+  const { context, secretStore, agentRuntime } = deps;
 
   const showPanel = (draft?: { message?: string; intent?: string; env?: string; target?: 'web' | 'mobile'; autoSend?: boolean }) =>
-    PantherEyesChatPanel.createOrShow(context, { secretStore }, draft);
+    PantherEyesChatPanel.createOrShow(context, { secretStore, agentRuntime }, draft);
 
   const askAgent = vscode.commands.registerCommand('panthereyes.askAgent', async () => {
+    void agentRuntime.ensureAgentReady({ interactive: false, reason: 'askAgent-command' });
     showPanel();
   });
 
   const validateSecurityConfig = vscode.commands.registerCommand(
     'panthereyes.validateSecurityConfig',
     async () => {
+      void agentRuntime.ensureAgentReady({ interactive: false, reason: 'validateSecurityConfig-command' });
       const env = getConfiguredEnv();
       const target = getConfiguredTarget();
       showPanel({
@@ -109,5 +113,9 @@ export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[]
     await vscode.window.showInformationMessage(`PantherEyes provider set to ${picked}. No API key stored yet.`);
   });
 
-  return [askAgent, validateSecurityConfig, runScan, setLlmProvider];
+  const agentStatus = vscode.commands.registerCommand('panthereyes.agentStatus', async () => {
+    await agentRuntime.showStatusActions();
+  });
+
+  return [askAgent, validateSecurityConfig, runScan, setLlmProvider, agentStatus];
 }

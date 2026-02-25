@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { PantherEyesAgentClient, PantherEyesAgentClientError } from '../services/agentClient';
+import { PantherEyesAgentRuntimeManager } from '../services/agentRuntimeManager';
 import { PantherEyesSecretStore } from '../services/secretStore';
 import type { PantherEyesChatRequest, PantherEyesChatResponse, PantherEyesTarget } from '../types/agent';
 import { getAgentServerUrl, getConfiguredEnv, getConfiguredTarget, getPrimaryWorkspacePath } from '../util/workspace';
@@ -14,6 +15,7 @@ interface ChatPanelDraft {
 
 interface ChatPanelServices {
   secretStore: PantherEyesSecretStore;
+  agentRuntime: PantherEyesAgentRuntimeManager;
 }
 
 export class PantherEyesChatPanel {
@@ -104,6 +106,15 @@ export class PantherEyesChatPanel {
     };
 
     const endpoint = getAgentServerUrl();
+    const ready = await this.services.agentRuntime.ensureAgentReady({ interactive: false, reason: 'chat-submit' });
+    if (!ready) {
+      this.postToWebview({
+        type: 'agentError',
+        error: 'PantherEyes agent is offline. The extension could not start/connect to the local agent.',
+        endpoint,
+      });
+      return;
+    }
     const client = new PantherEyesAgentClient(endpoint);
     this.postToWebview({ type: 'agentLoading', endpoint, request });
 

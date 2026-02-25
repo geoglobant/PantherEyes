@@ -7,6 +7,11 @@
     "build": "pnpm -r --if-present run build",
     "lint": "pnpm -r --if-present run lint",
     "typecheck": "pnpm -r --if-present run typecheck",
+    "agent:deps:build": "corepack pnpm --filter @panthereyes/rule-catalog build && corepack pnpm --filter @panthereyes/policy-engine build && corepack pnpm --filter @panthereyes/sdk-ts build",
+    "agent:build": "corepack pnpm run agent:deps:build && corepack pnpm --filter @panthereyes/agent-server build",
+    "agent:up": "corepack pnpm run agent:build && PORT=4711 node apps/agent-server/dist/index.js",
+    "agent:up:dev": "corepack pnpm run agent:deps:build && PORT=4711 corepack pnpm --filter @panthereyes/agent-server dev",
+    "extension:package": "corepack pnpm --filter panthereyes-vscode-extension package:vsix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
