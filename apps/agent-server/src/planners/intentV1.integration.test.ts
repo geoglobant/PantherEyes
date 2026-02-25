@@ -132,3 +132,29 @@ test('suggest_remediation intent returns remediation guidance for android alias'
   assert.equal(remediation.policyGuidance.length >= 2, true);
 });
 
+test('create_policy_exception intent returns dry-run ChangeSet updating exceptions.yaml', async () => {
+  const rootDir = mkdtempSync(path.join(tmpdir(), 'panthereyes-agent-intents-'));
+  writeFixtureConfig(rootDir);
+
+  try {
+    const runtime = new AgentRuntime(createLogger({ test: 'create_policy_exception_intent' }));
+    const response = await runtime.handleChat({
+      message: 'criar excecao para IOS-ATS-001 em dev com aprovacao security-team',
+      intent: 'create_policy_exception',
+      context: { rootDir, env: 'dev', target: 'mobile' },
+    });
+
+    assert.equal(response.intent.resolvedIntent, 'create_policy_exception');
+    assert.equal(response.planner.plannerId, 'create_policy_exception');
+    assert.equal(response.planner.changeSet.dryRun, true);
+    assert.equal(response.planner.changeSet.changes.length, 1);
+    assert.equal(response.planner.changeSet.changes[0]?.path, '.panthereyes/exceptions.yaml');
+    assert.match(response.planner.changeSet.changes[0]?.content ?? '', /mobile\.ios\.ats\.arbitrary-loads-enabled/);
+
+    const proposed = response.planner.toolOutputs.proposedException as { exceptionId: string; approvedBy: string };
+    assert.match(proposed.exceptionId, /^EXC-/);
+    assert.equal(proposed.approvedBy, 'security-team');
+  } finally {
+    rmSync(rootDir, { recursive: true, force: true });
+  }
+});

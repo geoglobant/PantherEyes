@@ -8,6 +8,7 @@ import type { Logger } from '../logging';
 import { ToolExecutor } from '../tools/executor';
 import { ToolRegistry } from '../tools/registry';
 import type { ToolOutputMap } from '../tools/types';
+import { resolveFindingKnowledge } from '../planners/findingKnowledge';
 import type { ToolName } from '../types';
 import type { McpToolCallResult, McpToolDefinition } from './types';
 
@@ -17,7 +18,9 @@ type McpToolName =
   | 'panthereyes.list_effective_directives'
   | 'panthereyes.generate_policy_tests'
   | 'panthereyes.compare_policy_envs'
-  | 'panthereyes.scan';
+  | 'panthereyes.scan'
+  | 'panthereyes.explain_finding'
+  | 'panthereyes.suggest_remediation';
 
 interface McpToolCallParams {
   name: string;
@@ -122,6 +125,34 @@ export class PantherEyesMcpToolHost {
             },
           },
           ['rootDir', 'env', 'target'],
+        ),
+      },
+      {
+        name: 'panthereyes.explain_finding',
+        description: 'Explain a PantherEyes finding (supports demo aliases like IOS-ATS-001 / AND-NET-001).',
+        inputSchema: objectSchema(
+          {
+            findingId: { type: 'string', description: 'Finding ID or alias (e.g., IOS-ATS-001)' },
+            rootDir: { type: 'string' },
+            env: { type: 'string' },
+            target: { type: 'string', enum: ['web', 'mobile'] },
+          },
+          ['findingId'],
+        ),
+      },
+      {
+        name: 'panthereyes.suggest_remediation',
+        description: 'Return deterministic remediation guidance for a PantherEyes finding.',
+        inputSchema: objectSchema(
+          {
+            findingId: { type: 'string', description: 'Finding ID or alias (e.g., AND-NET-001)' },
+            rootDir: { type: 'string' },
+            env: { type: 'string' },
+            target: { type: 'string', enum: ['web', 'mobile'] },
+            keepDevWarn: { type: 'boolean' },
+            prodBlock: { type: 'boolean' },
+          },
+          ['findingId'],
         ),
       },
     ];
@@ -263,6 +294,129 @@ export class PantherEyesMcpToolHost {
           structuredContent: scanResult,
         };
       }
+
+      case 'panthereyes.explain_finding': {
+        const findingId = readString(rawArgs, 'findingId');
+        const knowledge = resolveFindingKnowledge(findingId);
+        const rootDir = readOptionalString(rawArgs, 'rootDir');
+        const env = readOptionalString(rawArgs, 'env');
+        const target = readOptionalTarget(rawArgs, 'target');
+
+        const policyContext =
+          rootDir && env && target
+            ? await this.runTool('preview_effective_policy', { rootDir, env, target })
+                .then((preview) => ({
+                  env: preview.env,
+                  target: preview.target,
+                  mode: preview.mode,
+                  failOnSeverity: preview.failOnSeverity,
+                }))
+                .catch(() => null)
+            : null;
+
+        if (!knowledge) {
+          const unknown = {
+            findingId,
+            known: false,
+            explanation:
+              'Unknown deterministic finding. Use the exact PantherEyes finding id from scan JSON, or rely on /chat intent for future LLM-backed support.',
+            policyContext,
+          };
+          return {
+            content: [
+              { type: 'text', text: `No deterministic knowledge entry found for ${findingId}.` },
+              { type: 'json', json: unknown },
+            ],
+            structuredContent: unknown,
+          };
+        }
+
+        const result = {
+          known: true,
+          findingId: knowledge.canonicalId,
+          requestedFindingId: findingId,
+          title: knowledge.title,
+          severity: knowledge.severity,
+          target: knowledge.target,
+          explanation: knowledge.explanation,
+          risk: knowledge.risk,
+          remediation: knowledge.remediation,
+          references: knowledge.references,
+          policyContext,
+        };
+        return {
+          content: [
+            { type: 'text', text: `Explained finding ${knowledge.canonicalId} (${knowledge.severity}).` },
+            { type: 'json', json: result },
+          ],
+          structuredContent: result,
+        };
+      }
+
+      case 'panthereyes.suggest_remediation': {
+        const findingId = readString(rawArgs, 'findingId');
+        const knowledge = resolveFindingKnowledge(findingId);
+        const keepDevWarn = readOptionalBoolean(rawArgs, 'keepDevWarn') ?? false;
+        const prodBlock = readOptionalBoolean(rawArgs, 'prodBlock') ?? false;
+        const rootDir = readOptionalString(rawArgs, 'rootDir');
+        const env = readOptionalString(rawArgs, 'env');
+        const target = readOptionalTarget(rawArgs, 'target');
+
+        const policyContext =
+          rootDir && env && target
+            ? await this.runTool('preview_effective_policy', { rootDir, env, target })
+                .then((preview) => ({
+                  env: preview.env,
+                  target: preview.target,
+                  mode: preview.mode,
+                  failOnSeverity: preview.failOnSeverity,
+                }))
+                .catch(() => null)
+            : null;
+
+        const result = knowledge
+          ? {
+              known: true,
+              findingId: knowledge.canonicalId,
+              requestedFindingId: findingId,
+              title: knowledge.title,
+              remediationSteps: knowledge.remediation,
+              policyGuidance: [
+                keepDevWarn
+                  ? 'Keep dev in warn/audit while the remediation is rolled out and validated.'
+                  : 'Validate whether dev should remain warn/audit during remediation rollout.',
+                prodBlock
+                  ? 'Keep or move prod to block for this severity once remediation is available.'
+                  : 'Confirm prod enforcement threshold blocks this finding severity when required.',
+              ],
+              references: knowledge.references,
+              policyContext,
+            }
+          : {
+              known: false,
+              findingId,
+              remediationSteps: [
+                'Use the exact finding id from PantherEyes scan JSON output.',
+                'Provide rootDir/env/target to receive policy-aware remediation context.',
+              ],
+              policyGuidance: ['Deterministic remediation guidance is currently available for seeded demo findings only.'],
+              references: [],
+              policyContext,
+            };
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result.known
+                ? `Suggested remediation for ${result.findingId}.`
+                : `No deterministic remediation template found for ${findingId}.`,
+            },
+            { type: 'json', json: result },
+          ],
+          structuredContent: result,
+        };
+      }
     }
   }
 
@@ -302,6 +456,8 @@ function assertMcpToolName(name: string): McpToolName {
       'panthereyes.generate_policy_tests',
       'panthereyes.compare_policy_envs',
       'panthereyes.scan',
+      'panthereyes.explain_finding',
+      'panthereyes.suggest_remediation',
     ]);
   if (!allowed.has(name as McpToolName)) {
     throw new Error(`Unknown MCP tool: ${name}`);
@@ -340,6 +496,31 @@ function readTarget(source: Record<string, unknown>, field: string): 'web' | 'mo
   const value = readString(source, field);
   if (value !== 'web' && value !== 'mobile') {
     throw new Error(`Invalid tools/call argument '${field}': expected 'web' or 'mobile'`);
+  }
+  return value;
+}
+
+function readOptionalTarget(
+  source: Record<string, unknown>,
+  field: string,
+): 'web' | 'mobile' | undefined {
+  const value = readOptionalString(source, field);
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value !== 'web' && value !== 'mobile') {
+    throw new Error(`Invalid tools/call argument '${field}': expected 'web' or 'mobile'`);
+  }
+  return value;
+}
+
+function readOptionalBoolean(source: Record<string, unknown>, field: string): boolean | undefined {
+  const value = source[field];
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== 'boolean') {
+    throw new Error(`Invalid tools/call argument '${field}': expected boolean`);
   }
   return value;
 }

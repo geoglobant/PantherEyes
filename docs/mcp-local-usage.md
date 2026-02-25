@@ -19,6 +19,8 @@ PantherEyes tools exposed:
 - `panthereyes.compare_policy_envs`
 - `panthereyes.scan`
 - `panthereyes.generate_policy_tests`
+- `panthereyes.explain_finding`
+- `panthereyes.suggest_remediation`
 
 Transport:
 
@@ -111,6 +113,30 @@ corepack pnpm mcp:up:dev
 }
 ```
 
+### `panthereyes.explain_finding`
+
+```json
+{
+  "name": "panthereyes.explain_finding",
+  "arguments": {
+    "findingId": "IOS-ATS-001"
+  }
+}
+```
+
+### `panthereyes.suggest_remediation`
+
+```json
+{
+  "name": "panthereyes.suggest_remediation",
+  "arguments": {
+    "findingId": "AND-NET-001",
+    "keepDevWarn": true,
+    "prodBlock": true
+  }
+}
+```
+
 ## MCP client configuration examples (Codex / Claude)
 
 The PantherEyes MCP server uses **stdio**, so any MCP-capable client that supports launching a local command can connect to it.
@@ -167,13 +193,22 @@ Required fields conceptually:
 After registering the MCP server in your client:
 
 1. Verify the client can connect and list tools.
-2. Confirm these tools appear: `panthereyes.scan`, `panthereyes.compare_policy_envs`, `panthereyes.generate_policy_tests`.
+2. Confirm these tools appear: `panthereyes.scan`, `panthereyes.compare_policy_envs`, `panthereyes.generate_policy_tests`, `panthereyes.explain_finding`.
 3. Run a simple call with `samples/ios-panthereyes-demo` as `rootDir`.
 4. Check MCP logs (stderr) if the client reports startup errors.
+
+## Related `/chat` intents (agent-server)
+
+The HTTP `/chat` server now also supports deterministic intents useful for demos:
+
+- `compare_policy_envs`
+- `explain_finding`
+- `suggest_remediation`
+- `create_policy_exception` (returns a dry-run `ChangeSet` for `.panthereyes/exceptions.yaml`)
 
 ## Next recommended improvements
 
 1. Add formal MCP schema tests (request/response framing)
 2. Normalize shared schemas between `/chat` and MCP tools
 3. Add more protocol/tool call integration tests (success + invalid params)
-4. Consider exposing `panthereyes.scan` through core tool registry (not only MCP host)
+4. Expose `/chat` intent capabilities (for example `create_policy_exception`) as dedicated MCP tools where it adds value

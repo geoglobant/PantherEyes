@@ -2,7 +2,8 @@ export type IntentId =
   | 'generate_policy_tests'
   | 'compare_policy_envs'
   | 'explain_finding'
-  | 'suggest_remediation';
+  | 'suggest_remediation'
+  | 'create_policy_exception';
 
 export type AgentTarget = 'web' | 'mobile';
 

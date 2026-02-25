@@ -27,6 +27,12 @@ export const intentCatalog: IntentDefinition[] = [
     keywords: ['remediation', 'fix', 'resolve', 'mitigate', 'remediacao', 'corrigir', 'bloqueie'],
   },
   {
+    id: 'create_policy_exception',
+    title: 'Create Policy Exception',
+    description: 'Generate a dry-run ChangeSet proposal to add an exception entry in exceptions.yaml.',
+    keywords: ['exception', 'excecao', 'waiver', 'bypass', 'approve', 'approved', 'criar excecao'],
+  },
+  {
     id: 'generate_policy_tests',
     title: 'Generate Policy Tests',
     description: 'Generate a dry-run ChangeSet with policy validation tests for an env and target.',

@@ -1,6 +1,7 @@
 import type { IntentId } from '../types';
 import type { Planner } from './types';
 import { comparePolicyEnvsPlanner } from './comparePolicyEnvs';
+import { createPolicyExceptionPlanner } from './createPolicyException';
 import { explainFindingPlanner } from './explainFinding';
 import { generatePolicyTestsPlanner } from './generatePolicyTests';
 import { suggestRemediationPlanner } from './suggestRemediation';
@@ -11,6 +12,7 @@ export class PlannerRegistry {
     [comparePolicyEnvsPlanner.id, comparePolicyEnvsPlanner],
     [explainFindingPlanner.id, explainFindingPlanner],
     [suggestRemediationPlanner.id, suggestRemediationPlanner],
+    [createPolicyExceptionPlanner.id, createPolicyExceptionPlanner],
   ]);
 
   get(intentId: IntentId): Planner {

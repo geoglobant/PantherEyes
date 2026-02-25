@@ -7,7 +7,7 @@ test('mcp tool host lists PantherEyes tools', () => {
   const host = new PantherEyesMcpToolHost(createMcpLogger({ test: 'tool-list' }));
   const tools = host.listTools();
 
-  assert.equal(tools.length, 6);
+  assert.equal(tools.length, 8);
   assert.deepEqual(
     tools.map((tool) => tool.name),
     [
@@ -17,6 +17,8 @@ test('mcp tool host lists PantherEyes tools', () => {
       'panthereyes.compare_policy_envs',
       'panthereyes.scan',
       'panthereyes.generate_policy_tests',
+      'panthereyes.explain_finding',
+      'panthereyes.suggest_remediation',
     ],
   );
 });
@@ -79,4 +81,42 @@ test('mcp scan returns structured JSON output', async () => {
   };
   assert.equal(structured.phase, 'static');
   assert.equal(typeof structured.summary?.status, 'string');
+});
+
+test('mcp explain_finding resolves demo alias', async () => {
+  const host = new PantherEyesMcpToolHost(createMcpLogger({ test: 'explain-finding' }));
+  const result = await host.callTool({
+    name: 'panthereyes.explain_finding',
+    arguments: {
+      findingId: 'IOS-ATS-001',
+    },
+  });
+
+  const structured = result.structuredContent as {
+    known: boolean;
+    findingId: string;
+  };
+  assert.equal(structured.known, true);
+  assert.equal(structured.findingId, 'mobile.ios.ats.arbitrary-loads-enabled');
+});
+
+test('mcp suggest_remediation returns deterministic guidance for alias', async () => {
+  const host = new PantherEyesMcpToolHost(createMcpLogger({ test: 'suggest-remediation' }));
+  const result = await host.callTool({
+    name: 'panthereyes.suggest_remediation',
+    arguments: {
+      findingId: 'AND-NET-001',
+      keepDevWarn: true,
+      prodBlock: true,
+    },
+  });
+
+  const structured = result.structuredContent as {
+    known: boolean;
+    findingId: string;
+    policyGuidance: string[];
+  };
+  assert.equal(structured.known, true);
+  assert.equal(structured.findingId, 'mobile.android.cleartext-traffic-enabled');
+  assert.equal(structured.policyGuidance.length >= 2, true);
 });
