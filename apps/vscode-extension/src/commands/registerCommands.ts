@@ -57,20 +57,6 @@ async function pickProvider(current: LlmProvider): Promise<LlmProvider | undefin
   return undefined;
 }
 
-function getToolTextContent(result: { content?: Array<{ type: string; text?: string }> }): string | undefined {
-  return result.content?.find((item) => item.type === 'text' && typeof item.text === 'string')?.text;
-}
-
-async function openMarkdownPreview(title: string, content: string): Promise<void> {
-  const doc = await vscode.workspace.openTextDocument({
-    language: 'markdown',
-    content,
-  });
-  await vscode.window.showTextDocument(doc, { preview: true });
-  void vscode.commands.executeCommand('markdown.showPreviewToSide', doc.uri);
-  void vscode.window.showInformationMessage(title);
-}
-
 export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[] {
   const { context, secretStore, agentRuntime } = deps;
 
@@ -171,12 +157,20 @@ export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[]
         failOn: ['block'],
         format: 'both',
       });
-      const markdown = getToolTextContent(result);
-      if (markdown) {
-        await openMarkdownPreview(`PantherEyes scan report opened for ${target}.`, markdown);
-      } else {
-        void vscode.window.showInformationMessage(`PantherEyes scan completed for ${target}.`);
-      }
+      const panel = showPanel({ env: getConfiguredEnv(), target });
+      panel.showToolResult({
+        toolName: 'panthereyes.scan_gate_report',
+        endpoint: getAgentServerUrl(),
+        request: {
+          rootDir: workspacePath,
+          target,
+          phase: 'static',
+          failOn: ['block'],
+          format: 'both',
+        },
+        response: result,
+      });
+      void vscode.window.showInformationMessage(`PantherEyes scan report loaded in the PantherEyes panel.`);
     } catch (error) {
       const err = error as Error;
       const choice = await vscode.window.showErrorMessage(
@@ -219,12 +213,20 @@ export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[]
         compareEnv,
         format: 'both',
       });
-      const markdown = getToolTextContent(result);
-      if (markdown) {
-        await openMarkdownPreview(`PantherEyes policy diff report opened (${baseEnv} -> ${compareEnv}).`, markdown);
-      } else {
-        void vscode.window.showInformationMessage(`PantherEyes policy diff generated (${baseEnv} -> ${compareEnv}).`);
-      }
+      const panel = showPanel({ env: compareEnv, target });
+      panel.showToolResult({
+        toolName: 'panthereyes.compare_policy_envs_report',
+        endpoint: getAgentServerUrl(),
+        request: {
+          rootDir: workspacePath,
+          target,
+          baseEnv,
+          compareEnv,
+          format: 'both',
+        },
+        response: result,
+      });
+      void vscode.window.showInformationMessage(`PantherEyes policy diff loaded in the PantherEyes panel.`);
     } catch (error) {
       const err = error as Error;
       const selected = await vscode.window.showErrorMessage(
@@ -240,6 +242,38 @@ export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[]
           autoSend: true,
         });
       }
+    }
+  });
+
+  const showToolsSchema = vscode.commands.registerCommand('panthereyes.showToolsSchema', async () => {
+    const ready = await agentRuntime.ensureAgentReady({ interactive: true, reason: 'showToolsSchema-command' });
+    if (!ready) {
+      return;
+    }
+
+    const client = new PantherEyesAgentClient(getAgentServerUrl());
+    try {
+      const schema = await client.getToolsSchema();
+      const panel = showPanel({ env: getConfiguredEnv(), target: getConfiguredTarget() });
+      panel.showToolResult({
+        toolName: 'panthereyes.tools_schema',
+        endpoint: getAgentServerUrl(),
+        request: {},
+        response: {
+          content: [
+            {
+              type: 'text',
+              text: `Loaded tools schema v${schema.schemaVersion} with ${schema.tools.length} tool(s).`,
+            },
+            { type: 'json', json: schema },
+          ],
+          structuredContent: schema,
+        },
+      });
+      void vscode.window.showInformationMessage('PantherEyes tools schema loaded in the PantherEyes panel.');
+    } catch (error) {
+      const err = error as Error;
+      await vscode.window.showErrorMessage(`PantherEyes tools schema failed: ${err.message}`);
     }
   });
 
@@ -278,5 +312,5 @@ export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[]
     await agentRuntime.showStatusActions();
   });
 
-  return [askAgent, validateSecurityConfig, runScan, previewPolicyDiff, setLlmProvider, agentStatus];
+  return [askAgent, validateSecurityConfig, runScan, previewPolicyDiff, showToolsSchema, setLlmProvider, agentStatus];
 }

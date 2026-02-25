@@ -8,6 +8,7 @@ VS Code extension to integrate with the PantherEyes `agent-server`, send prompts
 - Command `PantherEyes: Validate Security Config`
 - Command `PantherEyes: Run Scan` (uses `/tools/call` + `scan_gate_report`, with terminal fallback)
 - Command `PantherEyes: Preview Policy Diff` (uses `/tools/call` + `compare_policy_envs_report`)
+- Command `PantherEyes: Show Tools Schema` (uses `/tools/schema`)
 - Command `PantherEyes: Set LLM Provider` (BYOK-ready via `SecretStorage`, no real provider yet)
 - Command `PantherEyes: Agent Status` (healthcheck / restart / logs)
 - Simple chat panel (Webview) with response + `ChangeSet` preview
@@ -82,6 +83,8 @@ corepack pnpm agent:up
 - The JSON response is displayed in the panel.
 - The `ChangeSet` is shown as cards with content previews.
 - Utility commands can call the HTTP tools bridge (`/tools/call`) directly for faster structured actions.
+- Tool results (scan, policy diff, schema) are rendered inside the PantherEyes webview.
+- When a result contains a `ChangeSet` (for example `create_policy_exception`), the panel can apply it with **Apply ChangeSet** after confirmation.
 
 ## Example Payload Sent to `agent-server`
 

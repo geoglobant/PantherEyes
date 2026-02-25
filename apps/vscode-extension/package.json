@@ -19,6 +19,7 @@
     "onCommand:panthereyes.validateSecurityConfig",
     "onCommand:panthereyes.runScan",
     "onCommand:panthereyes.previewPolicyDiff",
+    "onCommand:panthereyes.showToolsSchema",
     "onCommand:panthereyes.setLlmProvider",
     "onCommand:panthereyes.agentStatus"
   ],
@@ -66,6 +67,10 @@
       {
         "command": "panthereyes.previewPolicyDiff",
         "title": "PantherEyes: Preview Policy Diff"
+      },
+      {
+        "command": "panthereyes.showToolsSchema",
+        "title": "PantherEyes: Show Tools Schema"
       },
       {
         "command": "panthereyes.setLlmProvider",

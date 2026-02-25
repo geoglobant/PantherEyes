@@ -1,8 +1,15 @@
 import * as vscode from 'vscode';
+import * as path from 'node:path';
 import { PantherEyesAgentClient, PantherEyesAgentClientError } from '../services/agentClient';
 import { PantherEyesAgentRuntimeManager } from '../services/agentRuntimeManager';
 import { PantherEyesSecretStore } from '../services/secretStore';
-import type { PantherEyesChatRequest, PantherEyesChatResponse, PantherEyesTarget } from '../types/agent';
+import type {
+  PantherEyesChangeSet,
+  PantherEyesChatRequest,
+  PantherEyesChatResponse,
+  PantherEyesTarget,
+  PantherEyesToolCallResponse,
+} from '../types/agent';
 import { getAgentServerUrl, getConfiguredEnv, getConfiguredTarget, getPrimaryWorkspacePath } from '../util/workspace';
 
 interface ChatPanelDraft {
@@ -18,9 +25,18 @@ interface ChatPanelServices {
   agentRuntime: PantherEyesAgentRuntimeManager;
 }
 
+interface ToolPanelResultInput {
+  toolName: string;
+  endpoint?: string;
+  request?: Record<string, unknown>;
+  response: PantherEyesToolCallResponse | Record<string, unknown>;
+}
+
 export class PantherEyesChatPanel {
   private static current: PantherEyesChatPanel | undefined;
   private readonly panel: vscode.WebviewPanel;
+  private currentChangeSet: PantherEyesChangeSet | undefined;
+  private currentChangeSetRootDir: string | undefined;
 
   static createOrShow(context: vscode.ExtensionContext, services: ChatPanelServices, draft?: ChatPanelDraft): PantherEyesChatPanel {
     const column = vscode.window.activeTextEditor?.viewColumn ?? vscode.ViewColumn.One;
@@ -66,6 +82,21 @@ export class PantherEyesChatPanel {
     this.postInitState({ ...draft, autoSend: true });
   }
 
+  showToolResult(input: ToolPanelResultInput): void {
+    const changeSet = extractChangeSet(input.response);
+    this.currentChangeSet = changeSet;
+    this.currentChangeSetRootDir =
+      (typeof input.request?.rootDir === 'string' && input.request.rootDir) || getPrimaryWorkspacePath() || undefined;
+    this.postToWebview({
+      type: 'toolResponse',
+      toolName: input.toolName,
+      endpoint: input.endpoint,
+      request: input.request,
+      response: input.response,
+      changeSet,
+    });
+  }
+
   private async handleMessage(message: unknown): Promise<void> {
     if (!message || typeof message !== 'object') {
       return;
@@ -79,6 +110,11 @@ export class PantherEyesChatPanel {
 
     if (msg.type === 'submitPrompt') {
       await this.handleSubmitPrompt(msg);
+      return;
+    }
+
+    if (msg.type === 'applyChangeSet') {
+      await this.handleApplyChangeSet();
       return;
     }
   }
@@ -120,6 +156,8 @@ export class PantherEyesChatPanel {
 
     try {
       const response = await client.chat(request);
+      this.currentChangeSet = response.planner?.changeSet;
+      this.currentChangeSetRootDir = rootDir ?? undefined;
       this.postToWebview({ type: 'agentResponse', endpoint, request, response });
     } catch (error) {
       const err = error as Error;
@@ -130,6 +168,40 @@ export class PantherEyesChatPanel {
         details,
         endpoint,
       });
+    }
+  }
+
+  private async handleApplyChangeSet(): Promise<void> {
+    const changeSet = this.currentChangeSet;
+    const rootDir = this.currentChangeSetRootDir ?? getPrimaryWorkspacePath();
+    if (!changeSet || !Array.isArray(changeSet.changes) || changeSet.changes.length === 0) {
+      this.postToWebview({ type: 'agentError', error: 'No ChangeSet available to apply.' });
+      return;
+    }
+    if (!rootDir) {
+      this.postToWebview({ type: 'agentError', error: 'No workspace root available to apply the ChangeSet.' });
+      return;
+    }
+
+    const confirm = await vscode.window.showWarningMessage(
+      `Apply ChangeSet with ${changeSet.changes.length} change(s) to workspace?`,
+      { modal: true },
+      'Apply',
+    );
+    if (confirm !== 'Apply') {
+      return;
+    }
+
+    try {
+      await applyChangeSetToWorkspace(changeSet, rootDir);
+      this.postToWebview({
+        type: 'changesApplied',
+        message: `Applied ${changeSet.changes.length} change(s) to ${rootDir}.`,
+      });
+      void vscode.window.showInformationMessage(`PantherEyes applied ${changeSet.changes.length} ChangeSet file(s).`);
+    } catch (error) {
+      const err = error as Error;
+      this.postToWebview({ type: 'agentError', error: `Apply ChangeSet failed: ${err.message}` });
     }
   }
 
@@ -197,14 +269,18 @@ export class PantherEyesChatPanel {
     .changes { display: grid; gap: 8px; }
     .change { border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
     .change h4 { margin: 0 0 6px 0; font-size: 13px; }
-    .toolbar { display: flex; gap: 8px; align-items: center; }
+    .toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+    .toolbar-left { display: flex; gap: 8px; align-items: center; }
+    .toolbar button { padding: 4px 8px; font-size: 12px; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <div class="toolbar">
-        <strong>PantherEyes Agent Chat</strong>
+        <div class="toolbar-left">
+          <strong>PantherEyes Agent Chat</strong>
+        </div>
         <span id="provider" class="muted"></span>
       </div>
       <div class="muted" id="endpoint"></div>
@@ -236,12 +312,21 @@ export class PantherEyesChatPanel {
     </div>
 
     <div class="card">
-      <strong>ChangeSet Preview</strong>
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <strong>ChangeSet Preview</strong>
+        </div>
+        <button id="applyChanges" disabled>Apply ChangeSet</button>
+      </div>
       <div id="changes" class="changes" style="margin-top:10px;"></div>
     </div>
 
     <div class="card">
-      <strong>Agent Response</strong>
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <strong id="resultTitle">Agent Response</strong>
+        </div>
+      </div>
       <pre id="response">No response yet.</pre>
     </div>
   </div>
@@ -257,9 +342,11 @@ export class PantherEyesChatPanel {
       target: document.getElementById('target'),
       prompt: document.getElementById('prompt'),
       send: document.getElementById('send'),
+      applyChanges: document.getElementById('applyChanges'),
       status: document.getElementById('status'),
       changes: document.getElementById('changes'),
-      response: document.getElementById('response')
+      response: document.getElementById('response'),
+      resultTitle: document.getElementById('resultTitle')
     };
 
     let initialized = false;
@@ -271,6 +358,7 @@ export class PantherEyesChatPanel {
 
     function renderChanges(changeSet) {
       els.changes.innerHTML = '';
+      els.applyChanges.disabled = !changeSet || !Array.isArray(changeSet.changes) || changeSet.changes.length === 0;
       if (!changeSet || !Array.isArray(changeSet.changes) || changeSet.changes.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'muted';
@@ -317,6 +405,9 @@ export class PantherEyesChatPanel {
     }
 
     els.send.addEventListener('click', submit);
+    els.applyChanges.addEventListener('click', () => {
+      vscode.postMessage({ type: 'applyChangeSet' });
+    });
 
     window.addEventListener('message', (event) => {
       const msg = event.data || {};
@@ -342,6 +433,7 @@ export class PantherEyesChatPanel {
       }
 
       if (msg.type === 'agentLoading') {
+        els.resultTitle.textContent = 'Agent Response';
         setStatus('Sending request to ' + msg.endpoint + '...');
         return;
       }
@@ -353,10 +445,35 @@ export class PantherEyesChatPanel {
       }
 
       if (msg.type === 'agentResponse') {
+        els.resultTitle.textContent = 'Agent Response';
         setStatus('Agent response received.');
         const response = msg.response || {};
         renderChanges(response?.planner?.changeSet);
         els.response.textContent = JSON.stringify(response, null, 2);
+        return;
+      }
+
+      if (msg.type === 'toolResponse') {
+        els.resultTitle.textContent = 'Tool Result';
+        setStatus((msg.toolName || 'tool') + ' response received.');
+        renderChanges(msg.changeSet);
+        const response = msg.response || {};
+        const textContent =
+          Array.isArray(response.content)
+            ? response.content.find((item) => item && item.type === 'text' && typeof item.text === 'string')?.text
+            : undefined;
+        els.response.textContent = (textContent ? (textContent + '\\n\\n') : '') + JSON.stringify({
+          toolName: msg.toolName,
+          endpoint: msg.endpoint,
+          request: msg.request,
+          response
+        }, null, 2);
+        return;
+      }
+
+      if (msg.type === 'changesApplied') {
+        setStatus(msg.message || 'ChangeSet applied.');
+        return;
       }
     });
 
@@ -364,5 +481,66 @@ export class PantherEyesChatPanel {
   </script>
 </body>
 </html>`;
+  }
+}
+
+function extractChangeSet(payload: unknown): PantherEyesChangeSet | undefined {
+  if (!payload || typeof payload !== 'object') {
+    return undefined;
+  }
+
+  const direct = tryAsChangeSet(payload);
+  if (direct) {
+    return direct;
+  }
+
+  const record = payload as Record<string, unknown>;
+  const planner = record.planner;
+  if (planner && typeof planner === 'object') {
+    const plannerChangeSet = tryAsChangeSet((planner as Record<string, unknown>).changeSet);
+    if (plannerChangeSet) {
+      return plannerChangeSet;
+    }
+  }
+
+  const structured = record.structuredContent;
+  if (structured && typeof structured === 'object') {
+    const structuredRecord = structured as Record<string, unknown>;
+    const structuredDirect = tryAsChangeSet(structuredRecord.changeSet);
+    if (structuredDirect) {
+      return structuredDirect;
+    }
+    const structuredPlanner = structuredRecord.planner;
+    if (structuredPlanner && typeof structuredPlanner === 'object') {
+      return tryAsChangeSet((structuredPlanner as Record<string, unknown>).changeSet);
+    }
+  }
+
+  return undefined;
+}
+
+function tryAsChangeSet(value: unknown): PantherEyesChangeSet | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+  const candidate = value as Record<string, unknown>;
+  if (typeof candidate.summary !== 'string' || !Array.isArray(candidate.changes)) {
+    return undefined;
+  }
+  return value as PantherEyesChangeSet;
+}
+
+async function applyChangeSetToWorkspace(changeSet: PantherEyesChangeSet, rootDir: string): Promise<void> {
+  const encoder = new TextEncoder();
+  const normalizedRoot = path.resolve(rootDir);
+
+  for (const change of changeSet.changes) {
+    const targetPath = path.resolve(normalizedRoot, change.path);
+    if (!targetPath.startsWith(normalizedRoot + path.sep) && targetPath !== normalizedRoot) {
+      throw new Error(`Refusing to write outside workspace root: ${change.path}`);
+    }
+
+    await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(targetPath)));
+    await vscode.workspace.fs.writeFile(vscode.Uri.file(targetPath), encoder.encode(change.content));
   }
 }
