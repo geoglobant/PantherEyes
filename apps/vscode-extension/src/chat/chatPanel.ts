@@ -38,6 +38,14 @@ export class PantherEyesChatPanel {
   private currentChangeSet: PantherEyesChangeSet | undefined;
   private currentChangeSetRootDir: string | undefined;
   private previewedChangeSetFingerprint: string | undefined;
+  private cachedToolsSchema:
+    | {
+        schemaVersion: number;
+        generatedAt: string;
+        endpoints: { list: string; call: string; schema: string };
+        tools: Array<{ name: string; description: string; inputSchema: Record<string, unknown> }>;
+      }
+    | undefined;
 
   static createOrShow(context: vscode.ExtensionContext, services: ChatPanelServices, draft?: ChatPanelDraft): PantherEyesChatPanel {
     const column = vscode.window.activeTextEditor?.viewColumn ?? vscode.ViewColumn.One;
@@ -86,6 +94,7 @@ export class PantherEyesChatPanel {
   showToolResult(input: ToolPanelResultInput): void {
     const changeSet = extractChangeSet(input.response);
     this.currentChangeSet = changeSet;
+    this.previewedChangeSetFingerprint = undefined;
     this.currentChangeSetRootDir =
       (typeof input.request?.rootDir === 'string' && input.request.rootDir) || getPrimaryWorkspacePath() || undefined;
     this.postToWebview({
@@ -106,6 +115,7 @@ export class PantherEyesChatPanel {
 
     if (msg.type === 'requestState') {
       this.postInitState();
+      void this.handleRequestToolsSchema();
       return;
     }
 
@@ -119,6 +129,11 @@ export class PantherEyesChatPanel {
       return;
     }
 
+    if (msg.type === 'reviewAndApplyChangeSet') {
+      await this.handleReviewAndApplyChangeSet();
+      return;
+    }
+
     if (msg.type === 'previewChangeSetDiff') {
       await this.handlePreviewChangeSetDiff();
       return;
@@ -127,6 +142,29 @@ export class PantherEyesChatPanel {
     if (msg.type === 'runTool') {
       await this.handleRunTool(msg);
       return;
+    }
+  }
+
+  private async handleRequestToolsSchema(): Promise<void> {
+    if (this.cachedToolsSchema) {
+      this.postToWebview({ type: 'toolsSchema', schema: this.cachedToolsSchema });
+      return;
+    }
+
+    const endpoint = getAgentServerUrl();
+    const ready = await this.services.agentRuntime.ensureAgentReady({ interactive: false, reason: 'tools-schema' });
+    if (!ready) {
+      return;
+    }
+
+    try {
+      const client = new PantherEyesAgentClient(endpoint);
+      const schema = await client.getToolsSchema();
+      this.cachedToolsSchema = schema;
+      this.postToWebview({ type: 'toolsSchema', schema });
+    } catch (error) {
+      const err = error as Error;
+      this.postToWebview({ type: 'toolsSchemaError', error: err.message });
     }
   }
 
@@ -271,6 +309,77 @@ export class PantherEyesChatPanel {
     this.postToWebview({ type: 'changeSetPreviewed', message: `Previewed diff for ${change.path}` });
   }
 
+  private async handleReviewAndApplyChangeSet(): Promise<void> {
+    const changeSet = this.currentChangeSet;
+    const rootDir = this.currentChangeSetRootDir ?? getPrimaryWorkspacePath();
+    if (!changeSet || !Array.isArray(changeSet.changes) || changeSet.changes.length === 0) {
+      this.postToWebview({ type: 'agentError', error: 'No ChangeSet available to review.' });
+      return;
+    }
+    if (!rootDir) {
+      this.postToWebview({ type: 'agentError', error: 'No workspace root available to review/apply the ChangeSet.' });
+      return;
+    }
+
+    const selectedChanges: PantherEyesChangeSet['changes'] = [];
+
+    for (let i = 0; i < changeSet.changes.length; i += 1) {
+      const change = changeSet.changes[i];
+      if (!change) {
+        continue;
+      }
+
+      await previewSingleChangeDiff(change, rootDir);
+      const choice = await vscode.window.showQuickPick(
+        [
+          { label: 'Apply This File', value: 'apply', description: `${i + 1}/${changeSet.changes.length}` },
+          { label: 'Skip This File', value: 'skip' },
+          { label: 'Cancel Review', value: 'cancel' },
+        ],
+        {
+          title: `PantherEyes ChangeSet Review: ${change.path}`,
+          placeHolder: 'Decide what to do with this file change',
+        },
+      );
+
+      if (!choice || choice.value === 'cancel') {
+        this.postToWebview({ type: 'changesetReviewCanceled', message: 'ChangeSet review canceled.' });
+        return;
+      }
+      if (choice.value === 'apply') {
+        selectedChanges.push(change);
+      }
+    }
+
+    if (selectedChanges.length === 0) {
+      this.postToWebview({ type: 'changesetReviewCanceled', message: 'No file changes selected for apply.' });
+      return;
+    }
+
+    const reviewedChangeSet: PantherEyesChangeSet = {
+      dryRun: changeSet.dryRun,
+      summary: `${changeSet.summary} (reviewed selection: ${selectedChanges.length}/${changeSet.changes.length})`,
+      changes: selectedChanges,
+    };
+
+    const confirm = await vscode.window.showWarningMessage(
+      `Apply ${selectedChanges.length} reviewed ChangeSet file(s)?`,
+      { modal: true },
+      'Apply Selected',
+    );
+    if (confirm !== 'Apply Selected') {
+      return;
+    }
+
+    await applyChangeSetToWorkspace(reviewedChangeSet, rootDir);
+    this.previewedChangeSetFingerprint = changeSetFingerprint(reviewedChangeSet);
+    this.postToWebview({
+      type: 'changesApplied',
+      message: `Applied ${selectedChanges.length} reviewed change(s) to ${rootDir}.`,
+    });
+    void vscode.window.showInformationMessage(`PantherEyes applied ${selectedChanges.length} reviewed ChangeSet file(s).`);
+  }
+
   private async handleRunTool(msg: Record<string, unknown>): Promise<void> {
     const toolName = typeof msg.toolName === 'string' ? msg.toolName.trim() : '';
     const argsRaw = typeof msg.toolArgs === 'string' ? msg.toolArgs.trim() : '';
@@ -409,6 +518,12 @@ export class PantherEyesChatPanel {
     .history { display: grid; gap: 6px; max-height: 180px; overflow: auto; }
     .history-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
     .history-item strong { display: block; font-size: 12px; }
+    .schema-fields { display: grid; gap: 8px; margin-top: 8px; }
+    .schema-field { border: 1px dashed var(--border); border-radius: 8px; padding: 8px; }
+    .schema-field label { display: grid; gap: 6px; }
+    .schema-toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .schema-actions { display: flex; gap: 8px; }
+    .inline-note { font-size: 11px; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -453,6 +568,7 @@ export class PantherEyesChatPanel {
         <div class="toolbar-left">
           <strong>Run Tool...</strong>
         </div>
+        <span id="toolsSchemaStatus" class="muted"></span>
       </div>
       <div class="row">
         <label>Tool Name
@@ -472,6 +588,18 @@ export class PantherEyesChatPanel {
       <label style="margin-top:8px;">Tool Args (JSON object)
         <textarea id="toolArgs" placeholder="{ }" style="min-height:120px;"></textarea>
       </label>
+      <div class="schema-toolbar">
+        <label style="flex:1;">Schema Helper
+          <select id="schemaTool">
+            <option value="">(loading tools schema...)</option>
+          </select>
+        </label>
+        <div class="schema-actions">
+          <button id="applyFormToArgs" type="button">Sync Form -> JSON</button>
+          <button id="loadArgsToForm" type="button">Load JSON -> Form</button>
+        </div>
+      </div>
+      <div id="schemaFields" class="schema-fields"></div>
       <div style="margin-top:8px; display:flex; gap:8px;">
         <button id="runTool">Run Tool</button>
       </div>
@@ -484,6 +612,7 @@ export class PantherEyesChatPanel {
         </div>
         <div style="display:flex; gap:8px;">
           <button id="previewChanges" disabled>Preview Diff</button>
+          <button id="reviewApplyChanges" disabled>Review &amp; Apply</button>
           <button id="applyChanges" disabled>Apply ChangeSet</button>
         </div>
       </div>
@@ -524,8 +653,14 @@ export class PantherEyesChatPanel {
       toolName: document.getElementById('toolName'),
       toolPreset: document.getElementById('toolPreset'),
       toolArgs: document.getElementById('toolArgs'),
+      schemaTool: document.getElementById('schemaTool'),
+      schemaFields: document.getElementById('schemaFields'),
+      toolsSchemaStatus: document.getElementById('toolsSchemaStatus'),
+      applyFormToArgs: document.getElementById('applyFormToArgs'),
+      loadArgsToForm: document.getElementById('loadArgsToForm'),
       runTool: document.getElementById('runTool'),
       previewChanges: document.getElementById('previewChanges'),
+      reviewApplyChanges: document.getElementById('reviewApplyChanges'),
       applyChanges: document.getElementById('applyChanges'),
       clearHistory: document.getElementById('clearHistory'),
       status: document.getElementById('status'),
@@ -536,7 +671,48 @@ export class PantherEyesChatPanel {
     };
 
     let initialized = false;
-    const history = [];
+    const persisted = (typeof vscode.getState === 'function' ? (vscode.getState() || {}) : {}) || {};
+    const history = Array.isArray(persisted.history) ? persisted.history.slice(0, 20) : [];
+    let toolsSchema = Array.isArray(persisted.toolsSchema) ? persisted.toolsSchema : [];
+    let schemaFormValues = persisted.schemaFormValues && typeof persisted.schemaFormValues === 'object'
+      ? persisted.schemaFormValues
+      : {};
+    let pendingPersistTimer = undefined;
+
+    function schedulePersistState() {
+      if (pendingPersistTimer) {
+        clearTimeout(pendingPersistTimer);
+      }
+      pendingPersistTimer = setTimeout(() => {
+        pendingPersistTimer = undefined;
+        vscode.setState({
+          history: history.slice(0, 20),
+          toolsSchema,
+          schemaFormValues,
+          ui: {
+            intent: els.intent.value,
+            env: els.env.value,
+            target: els.target.value,
+            prompt: els.prompt.value,
+            toolName: els.toolName.value,
+            toolPreset: els.toolPreset.value,
+            toolArgs: els.toolArgs.value,
+            schemaTool: els.schemaTool.value
+          }
+        });
+      }, 50);
+    }
+
+    function safeParseJsonObject(text) {
+      if (!text || !String(text).trim()) {
+        return {};
+      }
+      const parsed = JSON.parse(String(text));
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('JSON must be an object');
+      }
+      return parsed;
+    }
 
     function setStatus(text, isError = false) {
       els.status.textContent = text || '';
@@ -546,6 +722,7 @@ export class PantherEyesChatPanel {
     function renderChanges(changeSet) {
       els.changes.innerHTML = '';
       els.applyChanges.disabled = !changeSet || !Array.isArray(changeSet.changes) || changeSet.changes.length === 0;
+      els.reviewApplyChanges.disabled = els.applyChanges.disabled;
       els.previewChanges.disabled = els.applyChanges.disabled;
       if (!changeSet || !Array.isArray(changeSet.changes) || changeSet.changes.length === 0) {
         const empty = document.createElement('div');
@@ -588,6 +765,7 @@ export class PantherEyesChatPanel {
         history.length = 20;
       }
       renderHistory();
+      schedulePersistState();
     }
 
     function renderHistory() {
@@ -611,6 +789,269 @@ export class PantherEyesChatPanel {
         row.appendChild(meta);
         els.history.appendChild(row);
       }
+    }
+
+    function getSelectedSchemaTool() {
+      const name = els.schemaTool.value || els.toolName.value || '';
+      return toolsSchema.find((tool) => tool && tool.name === name);
+    }
+
+    function getPropertyType(propertySchema) {
+      if (!propertySchema || typeof propertySchema !== 'object') return '';
+      if (Array.isArray(propertySchema.type)) {
+        return propertySchema.type.find((t) => typeof t === 'string') || '';
+      }
+      return typeof propertySchema.type === 'string' ? propertySchema.type : '';
+    }
+
+    function schemaFieldKey(toolName, propName) {
+      return String(toolName || '') + '::' + String(propName || '');
+    }
+
+    function readFormValueForProperty(container, propertySchema) {
+      const type = getPropertyType(propertySchema);
+      if (type === 'boolean') {
+        const checkbox = container.querySelector('input[type="checkbox"]');
+        return checkbox ? Boolean(checkbox.checked) : false;
+      }
+
+      const select = container.querySelector('select[data-role="enum"]');
+      if (select) {
+        return select.value;
+      }
+
+      const input = container.querySelector('input[data-role="value"], textarea[data-role="value"]');
+      if (!input) {
+        return undefined;
+      }
+
+      const raw = String(input.value ?? '');
+      if (raw === '') {
+        return undefined;
+      }
+
+      if (type === 'integer') {
+        const parsed = Number.parseInt(raw, 10);
+        return Number.isFinite(parsed) ? parsed : raw;
+      }
+      if (type === 'number') {
+        const parsed = Number(raw);
+        return Number.isFinite(parsed) ? parsed : raw;
+      }
+      if (type === 'array') {
+        return raw
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean);
+      }
+      return raw;
+    }
+
+    function writeFormValueForProperty(container, propertySchema, value) {
+      const type = getPropertyType(propertySchema);
+      if (type === 'boolean') {
+        const checkbox = container.querySelector('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = Boolean(value);
+        return;
+      }
+      const select = container.querySelector('select[data-role="enum"]');
+      if (select) {
+        select.value = value == null ? '' : String(value);
+        return;
+      }
+      const input = container.querySelector('input[data-role="value"], textarea[data-role="value"]');
+      if (!input) {
+        return;
+      }
+      if (Array.isArray(value)) {
+        input.value = value.join(', ');
+        return;
+      }
+      input.value = value == null ? '' : String(value);
+    }
+
+    function syncToolArgsFromSchemaForm() {
+      const tool = getSelectedSchemaTool();
+      if (!tool || !tool.inputSchema || typeof tool.inputSchema !== 'object') {
+        return;
+      }
+      const schema = tool.inputSchema;
+      const props = schema && typeof schema.properties === 'object' && schema.properties ? schema.properties : {};
+      const next = {};
+      const fieldNodes = els.schemaFields.querySelectorAll('[data-prop-name]');
+      for (const node of fieldNodes) {
+        const propName = node.getAttribute('data-prop-name');
+        if (!propName) continue;
+        const propertySchema = props[propName];
+        const value = readFormValueForProperty(node, propertySchema);
+        if (value !== undefined) {
+          next[propName] = value;
+          schemaFormValues[schemaFieldKey(tool.name, propName)] = value;
+        } else {
+          delete schemaFormValues[schemaFieldKey(tool.name, propName)];
+        }
+      }
+      els.toolArgs.value = JSON.stringify(next, null, 2);
+      schedulePersistState();
+    }
+
+    function loadSchemaFormFromToolArgs(showError = true) {
+      const tool = getSelectedSchemaTool();
+      if (!tool) {
+        return;
+      }
+      let parsed = {};
+      try {
+        parsed = safeParseJsonObject(els.toolArgs.value);
+      } catch (error) {
+        if (showError) {
+          setStatus('Tool Args JSON invalido para preencher o formulario: ' + error.message, true);
+        }
+        return;
+      }
+      const props = tool.inputSchema && typeof tool.inputSchema === 'object' && tool.inputSchema.properties && typeof tool.inputSchema.properties === 'object'
+        ? tool.inputSchema.properties
+        : {};
+      const fieldNodes = els.schemaFields.querySelectorAll('[data-prop-name]');
+      for (const node of fieldNodes) {
+        const propName = node.getAttribute('data-prop-name');
+        if (!propName) continue;
+        const propertySchema = props[propName];
+        writeFormValueForProperty(node, propertySchema, parsed[propName]);
+        if (parsed[propName] !== undefined) {
+          schemaFormValues[schemaFieldKey(tool.name, propName)] = parsed[propName];
+        }
+      }
+      schedulePersistState();
+    }
+
+    function renderSchemaFieldsForSelectedTool() {
+      els.schemaFields.innerHTML = '';
+      const tool = getSelectedSchemaTool();
+      if (!tool) {
+        const empty = document.createElement('div');
+        empty.className = 'muted';
+        empty.textContent = 'Select a tool with schema support to generate a guided form.';
+        els.schemaFields.appendChild(empty);
+        return;
+      }
+
+      const schema = tool.inputSchema;
+      const props = schema && typeof schema === 'object' && schema.properties && typeof schema.properties === 'object'
+        ? schema.properties
+        : {};
+      const required = Array.isArray(schema && schema.required) ? schema.required : [];
+      const propNames = Object.keys(props);
+
+      if (propNames.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'muted';
+        empty.textContent = 'This tool does not expose object properties in /tools/schema.';
+        els.schemaFields.appendChild(empty);
+        return;
+      }
+
+      for (const propName of propNames) {
+        const propertySchema = props[propName];
+        const wrapper = document.createElement('div');
+        wrapper.className = 'schema-field';
+        wrapper.setAttribute('data-prop-name', propName);
+
+        const label = document.createElement('label');
+        const title = document.createElement('span');
+        const type = getPropertyType(propertySchema);
+        const isRequired = required.includes(propName);
+        title.textContent = propName + (isRequired ? ' *' : '') + (type ? ' (' + type + ')' : '');
+        label.appendChild(title);
+
+        const enumValues = Array.isArray(propertySchema && propertySchema.enum) ? propertySchema.enum : undefined;
+        if (type === 'boolean') {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = Boolean(propertySchema && propertySchema.default);
+          checkbox.addEventListener('change', syncToolArgsFromSchemaForm);
+          label.appendChild(checkbox);
+        } else if (enumValues && enumValues.length > 0) {
+          const select = document.createElement('select');
+          select.setAttribute('data-role', 'enum');
+          const emptyOption = document.createElement('option');
+          emptyOption.value = '';
+          emptyOption.textContent = '(select)';
+          select.appendChild(emptyOption);
+          for (const optionValue of enumValues) {
+            const option = document.createElement('option');
+            option.value = String(optionValue);
+            option.textContent = String(optionValue);
+            select.appendChild(option);
+          }
+          select.addEventListener('change', syncToolArgsFromSchemaForm);
+          label.appendChild(select);
+        } else {
+          const isLong = typeof propertySchema?.description === 'string' && propertySchema.description.length > 80;
+          const input = isLong ? document.createElement('textarea') : document.createElement('input');
+          input.setAttribute('data-role', 'value');
+          input.placeholder = propertySchema && propertySchema.default != null ? String(propertySchema.default) : '';
+          if ((type === 'integer' || type === 'number') && input.tagName === 'INPUT') {
+            input.type = 'number';
+          } else if (type === 'array') {
+            input.placeholder = 'comma,separated,values';
+          }
+          input.addEventListener('input', syncToolArgsFromSchemaForm);
+          label.appendChild(input);
+        }
+
+        if (propertySchema && typeof propertySchema.description === 'string' && propertySchema.description.trim()) {
+          const note = document.createElement('div');
+          note.className = 'inline-note';
+          note.textContent = propertySchema.description.trim();
+          label.appendChild(note);
+        }
+
+        wrapper.appendChild(label);
+        els.schemaFields.appendChild(wrapper);
+
+        const cachedValue = schemaFormValues[schemaFieldKey(tool.name, propName)];
+        const defaultValue = propertySchema && Object.prototype.hasOwnProperty.call(propertySchema, 'default') ? propertySchema.default : undefined;
+        if (cachedValue !== undefined) {
+          writeFormValueForProperty(wrapper, propertySchema, cachedValue);
+        } else if (defaultValue !== undefined) {
+          writeFormValueForProperty(wrapper, propertySchema, defaultValue);
+        }
+      }
+
+      try {
+        loadSchemaFormFromToolArgs(false);
+      } catch {
+        // ignore; manual JSON may be incomplete while user types
+      }
+    }
+
+    function setToolsSchema(toolEntries) {
+      toolsSchema = Array.isArray(toolEntries) ? toolEntries : [];
+      els.schemaTool.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = toolsSchema.length ? '(select tool schema)' : '(schema unavailable)';
+      els.schemaTool.appendChild(placeholder);
+      for (const tool of toolsSchema) {
+        const option = document.createElement('option');
+        option.value = tool.name;
+        option.textContent = tool.name;
+        els.schemaTool.appendChild(option);
+      }
+
+      const preferred = els.toolName.value && toolsSchema.some((tool) => tool.name === els.toolName.value)
+        ? els.toolName.value
+        : (persisted.ui && persisted.ui.schemaTool && toolsSchema.some((tool) => tool.name === persisted.ui.schemaTool)
+            ? persisted.ui.schemaTool
+            : '');
+      els.schemaTool.value = preferred;
+      if (!els.schemaTool.value && els.toolPreset.value && toolsSchema.some((tool) => tool.name === els.toolPreset.value)) {
+        els.schemaTool.value = els.toolPreset.value;
+      }
+      els.toolsSchemaStatus.textContent = toolsSchema.length ? (toolsSchema.length + ' tools loaded') : 'Schema unavailable';
+      renderSchemaFieldsForSelectedTool();
+      schedulePersistState();
     }
 
     function submit() {
@@ -639,10 +1080,45 @@ export class PantherEyesChatPanel {
     els.toolPreset.addEventListener('change', () => {
       if (els.toolPreset.value) {
         els.toolName.value = els.toolPreset.value;
+        if (Array.isArray(toolsSchema) && toolsSchema.some((tool) => tool.name === els.toolPreset.value)) {
+          els.schemaTool.value = els.toolPreset.value;
+          renderSchemaFieldsForSelectedTool();
+        }
       }
+      schedulePersistState();
+    });
+    els.toolName.addEventListener('input', () => {
+      if (Array.isArray(toolsSchema) && toolsSchema.some((tool) => tool.name === els.toolName.value.trim())) {
+        els.schemaTool.value = els.toolName.value.trim();
+        renderSchemaFieldsForSelectedTool();
+      }
+      schedulePersistState();
+    });
+    els.schemaTool.addEventListener('change', () => {
+      if (els.schemaTool.value) {
+        els.toolName.value = els.schemaTool.value;
+      }
+      renderSchemaFieldsForSelectedTool();
+      syncToolArgsFromSchemaForm();
+      schedulePersistState();
+    });
+    els.applyFormToArgs.addEventListener('click', () => {
+      syncToolArgsFromSchemaForm();
+      setStatus('Schema helper synced form values to Tool Args JSON.');
+    });
+    els.loadArgsToForm.addEventListener('click', () => {
+      loadSchemaFormFromToolArgs(true);
+      setStatus('Schema helper loaded values from Tool Args JSON.');
+    });
+    els.toolArgs.addEventListener('blur', () => {
+      loadSchemaFormFromToolArgs(false);
+      schedulePersistState();
     });
     els.previewChanges.addEventListener('click', () => {
       vscode.postMessage({ type: 'previewChangeSetDiff' });
+    });
+    els.reviewApplyChanges.addEventListener('click', () => {
+      vscode.postMessage({ type: 'reviewAndApplyChangeSet' });
     });
     els.applyChanges.addEventListener('click', () => {
       vscode.postMessage({ type: 'applyChangeSet' });
@@ -650,6 +1126,11 @@ export class PantherEyesChatPanel {
     els.clearHistory.addEventListener('click', () => {
       history.length = 0;
       renderHistory();
+      schedulePersistState();
+    });
+    [els.intent, els.env, els.target, els.prompt].forEach((el) => {
+      el.addEventListener('input', schedulePersistState);
+      el.addEventListener('change', schedulePersistState);
     });
 
     window.addEventListener('message', (event) => {
@@ -672,12 +1153,37 @@ export class PantherEyesChatPanel {
         if (state.defaultToolArgs) {
           els.toolArgs.value = state.defaultToolArgs;
         }
+        const ui = persisted.ui && typeof persisted.ui === 'object' ? persisted.ui : {};
+        if (!state.autoSend) {
+          if (typeof ui.intent === 'string') els.intent.value = ui.intent;
+          if (typeof ui.env === 'string') els.env.value = ui.env;
+          if (typeof ui.target === 'string') els.target.value = ui.target;
+          if (typeof ui.prompt === 'string') els.prompt.value = ui.prompt;
+        }
+        if (typeof ui.toolName === 'string') els.toolName.value = ui.toolName;
+        if (typeof ui.toolPreset === 'string') els.toolPreset.value = ui.toolPreset;
+        if (typeof ui.toolArgs === 'string') els.toolArgs.value = ui.toolArgs;
         if (state.autoSend && state.draftPrompt && !initialized) {
           initialized = true;
           submit();
           return;
         }
         initialized = true;
+        schedulePersistState();
+        return;
+      }
+
+      if (msg.type === 'toolsSchema') {
+        setToolsSchema(msg.schema?.tools || []);
+        setStatus('Tools schema loaded.');
+        pushHistory('tool', 'Tools schema loaded', String((msg.schema?.tools || []).length) + ' tools');
+        return;
+      }
+
+      if (msg.type === 'toolsSchemaError') {
+        els.toolsSchemaStatus.textContent = 'Schema unavailable';
+        setStatus('Failed to load /tools/schema: ' + (msg.error || 'Unknown error'), true);
+        pushHistory('error', 'Tools schema error', msg.error || 'Unknown error');
         return;
       }
 
@@ -737,6 +1243,12 @@ export class PantherEyesChatPanel {
         return;
       }
 
+      if (msg.type === 'changesetReviewCanceled') {
+        setStatus(msg.message || 'ChangeSet review canceled.');
+        pushHistory('changeset', 'ChangeSet review canceled', msg.message || '');
+        return;
+      }
+
       if (msg.type === 'changeSetPreviewed') {
         setStatus(msg.message || 'ChangeSet diff previewed.');
         pushHistory('changeset', 'ChangeSet diff previewed', msg.message || '');
@@ -745,6 +1257,11 @@ export class PantherEyesChatPanel {
     });
 
     renderHistory();
+    if (Array.isArray(toolsSchema) && toolsSchema.length > 0) {
+      setToolsSchema(toolsSchema);
+    } else {
+      renderSchemaFieldsForSelectedTool();
+    }
     vscode.postMessage({ type: 'requestState' });
   </script>
 </body>
