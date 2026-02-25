@@ -471,11 +471,14 @@ export class PantherEyesChatPanel {
 
   private getHtml(): string {
     const nonce = String(Date.now());
+    const logoUri = this.panel.webview.asWebviewUri(
+      vscode.Uri.joinPath(this.context.extensionUri, 'media', 'panther-logo.png'),
+    );
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${this.panel.webview.cspSource} data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PantherEyes Chat</title>
   <style>
@@ -515,6 +518,22 @@ export class PantherEyesChatPanel {
     .toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
     .toolbar-left { display: flex; gap: 8px; align-items: center; }
     .toolbar button { padding: 4px 8px; font-size: 12px; }
+    .brand { display: flex; gap: 10px; align-items: center; }
+    .brand-logo-wrap {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #000;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,0.12);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .brand-logo { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .brand-copy { display: grid; gap: 2px; }
+    .brand-copy strong { font-size: 13px; line-height: 1.1; }
+    .brand-copy span { color: var(--muted); font-size: 11px; line-height: 1.1; }
     .history { display: grid; gap: 6px; max-height: 180px; overflow: auto; }
     .history-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
     .history-item strong { display: block; font-size: 12px; }
@@ -531,7 +550,15 @@ export class PantherEyesChatPanel {
     <div class="card">
       <div class="toolbar">
         <div class="toolbar-left">
-          <strong>PantherEyes Agent Chat</strong>
+          <div class="brand">
+            <div class="brand-logo-wrap">
+              <img class="brand-logo" src="${logoUri}" alt="PantherEyes logo" />
+            </div>
+            <div class="brand-copy">
+              <strong>PantherEyes Agent</strong>
+              <span>Security Copilot Console</span>
+            </div>
+          </div>
         </div>
         <span id="provider" class="muted"></span>
       </div>

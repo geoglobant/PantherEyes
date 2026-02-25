@@ -4,6 +4,7 @@
   "description": "VS Code extension scaffold for PantherEyes security feedback.",
   "version": "0.1.0",
   "publisher": "panthereyes",
+  "icon": "media/panther-logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/geoglobant/PantherEyes.git",

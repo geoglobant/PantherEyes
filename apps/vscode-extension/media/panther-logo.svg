@@ -1,0 +1,33 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="eyeGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="32" fill="#000000"/>
+  <path d="M130 110c-12 38-4 70 23 96m229-96c12 38 4 70-23 96" stroke="#F2F4F7" stroke-width="12" stroke-linecap="round"/>
+  <path d="M166 172c18-18 53-31 90-31s72 13 90 31" stroke="#F2F4F7" stroke-width="14" stroke-linecap="round"/>
+  <path d="M153 220c0-61 46-111 103-111s103 50 103 111c0 36-15 67-39 88-16 14-28 30-34 50h-60c-6-20-18-36-34-50-24-21-39-52-39-88Z" stroke="#F2F4F7" stroke-width="14" fill="none" stroke-linejoin="round"/>
+  <path d="M210 214c-20 0-38 10-50 26m142-26c20 0 38 10 50 26" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M170 274l54-12m-54 33 60-4m-60 29 62 6" stroke="#F2F4F7" stroke-width="8" stroke-linecap="round"/>
+  <path d="M342 274l-54-12m54 33-60-4m60 29-62 6" stroke="#F2F4F7" stroke-width="8" stroke-linecap="round"/>
+  <path d="M230 245c8-9 19-14 26-14s18 5 26 14" stroke="#F2F4F7" stroke-width="12" stroke-linecap="round"/>
+  <path d="M226 276c10 8 20 12 30 12s20-4 30-12" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M248 289l-18 18c-10 10-10 27 0 37l15 15m19-70 18 18c10 10 10 27 0 37l-15 15" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M220 365c9 26 23 44 36 44s27-18 36-44" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M208 349l-14 40m110-40 14 40" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M214 320l-18 34m120-34 18 34" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M222 377l-10 28m78-28 10 28" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M224 198c10-12 25-19 39-19s29 7 39 19c-7 12-20 20-39 20s-32-8-39-20Z" fill="#F2F4F7" opacity="0.08"/>
+  <ellipse cx="214" cy="206" rx="16" ry="9" fill="#FFFFFF" filter="url(#eyeGlow)"/>
+  <ellipse cx="298" cy="206" rx="16" ry="9" fill="#FFFFFF" filter="url(#eyeGlow)"/>
+  <path d="M202 173c10 0 21 4 30 10m78-10c-10 0-21 4-30 10" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M190 160 160 144m132 16 30-16" stroke="#F2F4F7" stroke-width="8" stroke-linecap="round"/>
+  <path d="M182 136 154 128m176 8 28-8" stroke="#F2F4F7" stroke-width="7" stroke-linecap="round"/>
+  <path d="M240 324l-10 34m42-34 10 34" stroke="#F2F4F7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M242 311c5 4 9 5 14 5s9-1 14-5" stroke="#F2F4F7" stroke-width="8" stroke-linecap="round"/>
+</svg>
