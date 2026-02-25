@@ -111,9 +111,69 @@ corepack pnpm mcp:up:dev
 }
 ```
 
+## MCP client configuration examples (Codex / Claude)
+
+The PantherEyes MCP server uses **stdio**, so any MCP-capable client that supports launching a local command can connect to it.
+
+### Common command (used by clients)
+
+Run from the monorepo root:
+
+```bash
+corepack pnpm mcp:up
+```
+
+If the client launches the command directly, use an absolute workspace path as the command working directory (or call `corepack` with `--dir` if the client supports it).
+
+### Claude Desktop (example)
+
+`claude_desktop_config.json` (example shape used by Claude Desktop; adjust path to your machine):
+
+```json
+{
+  "mcpServers": {
+    "panthereyes": {
+      "command": "corepack",
+      "args": ["pnpm", "mcp:up"],
+      "cwd": "/Users/george.michelon/Desktop/PantherEyes"
+    }
+  }
+}
+```
+
+### Codex / MCP-enabled coding client (generic example)
+
+Codex MCP configuration formats may vary by client/version. Use the equivalent fields below:
+
+```json
+{
+  "name": "panthereyes",
+  "transport": "stdio",
+  "command": "corepack",
+  "args": ["pnpm", "mcp:up"],
+  "cwd": "/Users/george.michelon/Desktop/PantherEyes"
+}
+```
+
+Required fields conceptually:
+
+- `command`: `corepack`
+- `args`: `["pnpm", "mcp:up"]`
+- `cwd`: PantherEyes monorepo root
+- `transport`: `stdio`
+
+### Validation checklist
+
+After registering the MCP server in your client:
+
+1. Verify the client can connect and list tools.
+2. Confirm these tools appear: `panthereyes.scan`, `panthereyes.compare_policy_envs`, `panthereyes.generate_policy_tests`.
+3. Run a simple call with `samples/ios-panthereyes-demo` as `rootDir`.
+4. Check MCP logs (stderr) if the client reports startup errors.
+
 ## Next recommended improvements
 
 1. Add formal MCP schema tests (request/response framing)
-2. Add documentation/examples for Codex/Claude MCP client configs
-3. Normalize shared schemas between `/chat` and MCP tools
+2. Normalize shared schemas between `/chat` and MCP tools
+3. Add more protocol/tool call integration tests (success + invalid params)
 4. Consider exposing `panthereyes.scan` through core tool registry (not only MCP host)

@@ -1,4 +1,8 @@
-export type IntentId = 'generate_policy_tests';
+export type IntentId =
+  | 'generate_policy_tests'
+  | 'compare_policy_envs'
+  | 'explain_finding'
+  | 'suggest_remediation';
 
 export type AgentTarget = 'web' | 'mobile';
 
