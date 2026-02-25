@@ -12,6 +12,8 @@ VS Code extension to integrate with the PantherEyes `agent-server`, send prompts
 - Command `PantherEyes: Set LLM Provider` (BYOK-ready via `SecretStorage`, no real provider yet)
 - Command `PantherEyes: Agent Status` (healthcheck / restart / logs)
 - Simple chat panel (Webview) with response + `ChangeSet` preview
+- Webview tool runner (`Run Tool...`) for direct `/tools/call` experiments
+- Webview history/timeline for agent/tool activity
 - Auto-start local agent for `localhost` endpoints (default enabled)
 
 ## Configuration
@@ -84,7 +86,9 @@ corepack pnpm agent:up
 - The `ChangeSet` is shown as cards with content previews.
 - Utility commands can call the HTTP tools bridge (`/tools/call`) directly for faster structured actions.
 - Tool results (scan, policy diff, schema) are rendered inside the PantherEyes webview.
-- When a result contains a `ChangeSet` (for example `create_policy_exception`), the panel can apply it with **Apply ChangeSet** after confirmation.
+- When a result contains a `ChangeSet` (for example `create_policy_exception`), the panel supports:
+  - **Preview Diff** (select a file change and open a VS Code diff)
+  - **Apply ChangeSet** (after confirmation)
 
 ## Example Payload Sent to `agent-server`
 

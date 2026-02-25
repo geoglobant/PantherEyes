@@ -37,6 +37,7 @@ export class PantherEyesChatPanel {
   private readonly panel: vscode.WebviewPanel;
   private currentChangeSet: PantherEyesChangeSet | undefined;
   private currentChangeSetRootDir: string | undefined;
+  private previewedChangeSetFingerprint: string | undefined;
 
   static createOrShow(context: vscode.ExtensionContext, services: ChatPanelServices, draft?: ChatPanelDraft): PantherEyesChatPanel {
     const column = vscode.window.activeTextEditor?.viewColumn ?? vscode.ViewColumn.One;
@@ -117,6 +118,16 @@ export class PantherEyesChatPanel {
       await this.handleApplyChangeSet();
       return;
     }
+
+    if (msg.type === 'previewChangeSetDiff') {
+      await this.handlePreviewChangeSetDiff();
+      return;
+    }
+
+    if (msg.type === 'runTool') {
+      await this.handleRunTool(msg);
+      return;
+    }
   }
 
   private async handleSubmitPrompt(msg: Record<string, unknown>): Promise<void> {
@@ -158,6 +169,7 @@ export class PantherEyesChatPanel {
       const response = await client.chat(request);
       this.currentChangeSet = response.planner?.changeSet;
       this.currentChangeSetRootDir = rootDir ?? undefined;
+      this.previewedChangeSetFingerprint = undefined;
       this.postToWebview({ type: 'agentResponse', endpoint, request, response });
     } catch (error) {
       const err = error as Error;
@@ -183,6 +195,23 @@ export class PantherEyesChatPanel {
       return;
     }
 
+    const fingerprint = changeSetFingerprint(changeSet);
+    if (this.previewedChangeSetFingerprint !== fingerprint) {
+      const choice = await vscode.window.showWarningMessage(
+        'Preview ChangeSet diff before applying?',
+        { modal: true },
+        'Preview Diff',
+        'Apply Anyway',
+      );
+      if (choice === 'Preview Diff') {
+        await this.handlePreviewChangeSetDiff();
+        return;
+      }
+      if (choice !== 'Apply Anyway') {
+        return;
+      }
+    }
+
     const confirm = await vscode.window.showWarningMessage(
       `Apply ChangeSet with ${changeSet.changes.length} change(s) to workspace?`,
       { modal: true },
@@ -205,6 +234,99 @@ export class PantherEyesChatPanel {
     }
   }
 
+  private async handlePreviewChangeSetDiff(): Promise<void> {
+    const changeSet = this.currentChangeSet;
+    const rootDir = this.currentChangeSetRootDir ?? getPrimaryWorkspacePath();
+    if (!changeSet || !Array.isArray(changeSet.changes) || changeSet.changes.length === 0) {
+      this.postToWebview({ type: 'agentError', error: 'No ChangeSet available to preview.' });
+      return;
+    }
+    if (!rootDir) {
+      this.postToWebview({ type: 'agentError', error: 'No workspace root available to preview the ChangeSet.' });
+      return;
+    }
+
+    const pick = await vscode.window.showQuickPick(
+      changeSet.changes.map((change, index) => ({
+        label: `${String(change.kind).toUpperCase()} ${change.path}`,
+        description: change.reason,
+        index,
+      })),
+      {
+        title: 'Preview PantherEyes ChangeSet Diff',
+        placeHolder: 'Select a file change to preview',
+      },
+    );
+    if (!pick) {
+      return;
+    }
+
+    const change = changeSet.changes[pick.index];
+    if (!change) {
+      return;
+    }
+
+    await previewSingleChangeDiff(change, rootDir);
+    this.previewedChangeSetFingerprint = changeSetFingerprint(changeSet);
+    this.postToWebview({ type: 'changeSetPreviewed', message: `Previewed diff for ${change.path}` });
+  }
+
+  private async handleRunTool(msg: Record<string, unknown>): Promise<void> {
+    const toolName = typeof msg.toolName === 'string' ? msg.toolName.trim() : '';
+    const argsRaw = typeof msg.toolArgs === 'string' ? msg.toolArgs.trim() : '';
+    if (!toolName) {
+      this.postToWebview({ type: 'agentError', error: 'Tool name is required.' });
+      return;
+    }
+
+    let args: Record<string, unknown> | undefined;
+    if (argsRaw) {
+      try {
+        const parsed = JSON.parse(argsRaw) as unknown;
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          throw new Error('Tool arguments JSON must be an object');
+        }
+        args = parsed as Record<string, unknown>;
+      } catch (error) {
+        const err = error as Error;
+        this.postToWebview({ type: 'agentError', error: `Invalid tool args JSON: ${err.message}` });
+        return;
+      }
+    }
+
+    const endpoint = getAgentServerUrl();
+    const ready = await this.services.agentRuntime.ensureAgentReady({ interactive: false, reason: 'tool-run' });
+    if (!ready) {
+      this.postToWebview({
+        type: 'agentError',
+        error: 'PantherEyes agent is offline. The extension could not start/connect to the local agent.',
+        endpoint,
+      });
+      return;
+    }
+
+    const client = new PantherEyesAgentClient(endpoint);
+    this.postToWebview({ type: 'toolLoading', toolName, endpoint, request: { name: toolName, arguments: args ?? {} } });
+    try {
+      const response = await client.callTool(toolName, args);
+      this.showToolResult({
+        toolName,
+        endpoint,
+        request: args ?? {},
+        response,
+      });
+    } catch (error) {
+      const err = error as Error;
+      const details = error instanceof PantherEyesAgentClientError ? error.body : undefined;
+      this.postToWebview({
+        type: 'agentError',
+        error: err.message,
+        details,
+        endpoint,
+      });
+    }
+  }
+
   private postInitState(draft?: ChatPanelDraft): void {
     const provider = this.services.secretStore.getProvider();
     this.postToWebview({
@@ -218,6 +340,18 @@ export class PantherEyesChatPanel {
         provider,
         draftPrompt: draft?.message ?? '',
         autoSend: draft?.autoSend ?? false,
+        defaultToolName: 'panthereyes.scan_gate_report',
+        defaultToolArgs: JSON.stringify(
+          {
+            rootDir: getPrimaryWorkspacePath() ?? '',
+            target: draft?.target ?? getConfiguredTarget(),
+            phase: 'static',
+            failOn: ['block'],
+            format: 'both',
+          },
+          null,
+          2,
+        ),
       },
     });
   }
@@ -272,6 +406,9 @@ export class PantherEyesChatPanel {
     .toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
     .toolbar-left { display: flex; gap: 8px; align-items: center; }
     .toolbar button { padding: 4px 8px; font-size: 12px; }
+    .history { display: grid; gap: 6px; max-height: 180px; overflow: auto; }
+    .history-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+    .history-item strong { display: block; font-size: 12px; }
   </style>
 </head>
 <body>
@@ -314,9 +451,41 @@ export class PantherEyesChatPanel {
     <div class="card">
       <div class="toolbar">
         <div class="toolbar-left">
+          <strong>Run Tool...</strong>
+        </div>
+      </div>
+      <div class="row">
+        <label>Tool Name
+          <input id="toolName" placeholder="panthereyes.scan_gate_report" />
+        </label>
+        <label>Quick Tool
+          <select id="toolPreset">
+            <option value="">(select preset)</option>
+            <option value="panthereyes.validate_security_config">validate_security_config</option>
+            <option value="panthereyes.scan_gate_report">scan_gate_report</option>
+            <option value="panthereyes.compare_policy_envs_report">compare_policy_envs_report</option>
+            <option value="panthereyes.create_policy_exception">create_policy_exception</option>
+            <option value="panthereyes.explain_finding">explain_finding</option>
+          </select>
+        </label>
+      </div>
+      <label style="margin-top:8px;">Tool Args (JSON object)
+        <textarea id="toolArgs" placeholder="{ }" style="min-height:120px;"></textarea>
+      </label>
+      <div style="margin-top:8px; display:flex; gap:8px;">
+        <button id="runTool">Run Tool</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <div class="toolbar-left">
           <strong>ChangeSet Preview</strong>
         </div>
-        <button id="applyChanges" disabled>Apply ChangeSet</button>
+        <div style="display:flex; gap:8px;">
+          <button id="previewChanges" disabled>Preview Diff</button>
+          <button id="applyChanges" disabled>Apply ChangeSet</button>
+        </div>
       </div>
       <div id="changes" class="changes" style="margin-top:10px;"></div>
     </div>
@@ -328,6 +497,16 @@ export class PantherEyesChatPanel {
         </div>
       </div>
       <pre id="response">No response yet.</pre>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <strong>History</strong>
+        </div>
+        <button id="clearHistory">Clear</button>
+      </div>
+      <div id="history" class="history" style="margin-top:10px;"></div>
     </div>
   </div>
 
@@ -342,14 +521,22 @@ export class PantherEyesChatPanel {
       target: document.getElementById('target'),
       prompt: document.getElementById('prompt'),
       send: document.getElementById('send'),
+      toolName: document.getElementById('toolName'),
+      toolPreset: document.getElementById('toolPreset'),
+      toolArgs: document.getElementById('toolArgs'),
+      runTool: document.getElementById('runTool'),
+      previewChanges: document.getElementById('previewChanges'),
       applyChanges: document.getElementById('applyChanges'),
+      clearHistory: document.getElementById('clearHistory'),
       status: document.getElementById('status'),
       changes: document.getElementById('changes'),
       response: document.getElementById('response'),
-      resultTitle: document.getElementById('resultTitle')
+      resultTitle: document.getElementById('resultTitle'),
+      history: document.getElementById('history')
     };
 
     let initialized = false;
+    const history = [];
 
     function setStatus(text, isError = false) {
       els.status.textContent = text || '';
@@ -359,6 +546,7 @@ export class PantherEyesChatPanel {
     function renderChanges(changeSet) {
       els.changes.innerHTML = '';
       els.applyChanges.disabled = !changeSet || !Array.isArray(changeSet.changes) || changeSet.changes.length === 0;
+      els.previewChanges.disabled = els.applyChanges.disabled;
       if (!changeSet || !Array.isArray(changeSet.changes) || changeSet.changes.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'muted';
@@ -389,6 +577,42 @@ export class PantherEyesChatPanel {
       }
     }
 
+    function pushHistory(kind, title, detail) {
+      history.unshift({
+        ts: new Date().toLocaleTimeString(),
+        kind,
+        title,
+        detail
+      });
+      if (history.length > 20) {
+        history.length = 20;
+      }
+      renderHistory();
+    }
+
+    function renderHistory() {
+      els.history.innerHTML = '';
+      if (history.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'muted';
+        empty.textContent = 'No activity yet.';
+        els.history.appendChild(empty);
+        return;
+      }
+      for (const item of history) {
+        const row = document.createElement('div');
+        row.className = 'history-item';
+        const title = document.createElement('strong');
+        title.textContent = '[' + item.ts + '] ' + item.title;
+        const meta = document.createElement('div');
+        meta.className = 'muted';
+        meta.textContent = item.kind + (item.detail ? ' · ' + item.detail : '');
+        row.appendChild(title);
+        row.appendChild(meta);
+        els.history.appendChild(row);
+      }
+    }
+
     function submit() {
       const prompt = els.prompt.value.trim();
       if (!prompt) {
@@ -405,8 +629,27 @@ export class PantherEyesChatPanel {
     }
 
     els.send.addEventListener('click', submit);
+    els.runTool.addEventListener('click', () => {
+      vscode.postMessage({
+        type: 'runTool',
+        toolName: els.toolName.value.trim(),
+        toolArgs: els.toolArgs.value
+      });
+    });
+    els.toolPreset.addEventListener('change', () => {
+      if (els.toolPreset.value) {
+        els.toolName.value = els.toolPreset.value;
+      }
+    });
+    els.previewChanges.addEventListener('click', () => {
+      vscode.postMessage({ type: 'previewChangeSetDiff' });
+    });
     els.applyChanges.addEventListener('click', () => {
       vscode.postMessage({ type: 'applyChangeSet' });
+    });
+    els.clearHistory.addEventListener('click', () => {
+      history.length = 0;
+      renderHistory();
     });
 
     window.addEventListener('message', (event) => {
@@ -423,6 +666,12 @@ export class PantherEyesChatPanel {
         if (state.draftPrompt) {
           els.prompt.value = state.draftPrompt;
         }
+        if (state.defaultToolName) {
+          els.toolName.value = state.defaultToolName;
+        }
+        if (state.defaultToolArgs) {
+          els.toolArgs.value = state.defaultToolArgs;
+        }
         if (state.autoSend && state.draftPrompt && !initialized) {
           initialized = true;
           submit();
@@ -435,12 +684,21 @@ export class PantherEyesChatPanel {
       if (msg.type === 'agentLoading') {
         els.resultTitle.textContent = 'Agent Response';
         setStatus('Sending request to ' + msg.endpoint + '...');
+        pushHistory('agent', 'Sending chat request', msg.request?.intent || msg.request?.message || 'chat');
+        return;
+      }
+
+      if (msg.type === 'toolLoading') {
+        els.resultTitle.textContent = 'Tool Result';
+        setStatus('Running tool ' + (msg.toolName || 'unknown') + '...');
+        pushHistory('tool', 'Running tool', msg.toolName || 'unknown');
         return;
       }
 
       if (msg.type === 'agentError') {
         setStatus(msg.error || 'Unknown error', true);
         els.response.textContent = JSON.stringify(msg, null, 2);
+        pushHistory('error', 'Error', msg.error || 'Unknown error');
         return;
       }
 
@@ -450,6 +708,7 @@ export class PantherEyesChatPanel {
         const response = msg.response || {};
         renderChanges(response?.planner?.changeSet);
         els.response.textContent = JSON.stringify(response, null, 2);
+        pushHistory('agent', 'Agent response', response?.planner?.plannerId || response?.intent?.resolvedIntent || 'chat');
         return;
       }
 
@@ -468,15 +727,24 @@ export class PantherEyesChatPanel {
           request: msg.request,
           response
         }, null, 2);
+        pushHistory('tool', 'Tool result', msg.toolName || 'tool');
         return;
       }
 
       if (msg.type === 'changesApplied') {
         setStatus(msg.message || 'ChangeSet applied.');
+        pushHistory('changeset', 'ChangeSet applied', msg.message || '');
+        return;
+      }
+
+      if (msg.type === 'changeSetPreviewed') {
+        setStatus(msg.message || 'ChangeSet diff previewed.');
+        pushHistory('changeset', 'ChangeSet diff previewed', msg.message || '');
         return;
       }
     });
 
+    renderHistory();
     vscode.postMessage({ type: 'requestState' });
   </script>
 </body>
@@ -543,4 +811,74 @@ async function applyChangeSetToWorkspace(changeSet: PantherEyesChangeSet, rootDi
     await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(targetPath)));
     await vscode.workspace.fs.writeFile(vscode.Uri.file(targetPath), encoder.encode(change.content));
   }
+}
+
+async function previewSingleChangeDiff(change: PantherEyesChangeSet['changes'][number], rootDir: string): Promise<void> {
+  const normalizedRoot = path.resolve(rootDir);
+  const targetPath = path.resolve(normalizedRoot, change.path);
+  if (!targetPath.startsWith(normalizedRoot + path.sep) && targetPath !== normalizedRoot) {
+    throw new Error(`Refusing to preview outside workspace root: ${change.path}`);
+  }
+
+  const targetUri = vscode.Uri.file(targetPath);
+  const exists = await fileExists(targetUri);
+  const languageHint = inferLanguageId(change);
+  const leftDoc = exists
+    ? await vscode.workspace.openTextDocument(targetUri)
+    : await vscode.workspace.openTextDocument({
+        language: languageHint,
+        content: '',
+      });
+  const rightDoc = await vscode.workspace.openTextDocument({
+    language: languageHint,
+    content: change.content,
+  });
+
+  await vscode.commands.executeCommand(
+    'vscode.diff',
+    leftDoc.uri,
+    rightDoc.uri,
+    `PantherEyes Preview: ${String(change.kind).toUpperCase()} ${change.path}`,
+    { preview: true },
+  );
+}
+
+async function fileExists(uri: vscode.Uri): Promise<boolean> {
+  try {
+    await vscode.workspace.fs.stat(uri);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function inferLanguageId(change: PantherEyesChangeSet['changes'][number]): string | undefined {
+  if (change.language) {
+    if (change.language === 'ts') return 'typescript';
+    if (change.language === 'md') return 'markdown';
+    if (change.language === 'json') return 'json';
+    if (change.language === 'yaml' || change.language === 'yml') return 'yaml';
+    return change.language;
+  }
+
+  const ext = path.extname(change.path).toLowerCase();
+  if (ext === '.ts') return 'typescript';
+  if (ext === '.js') return 'javascript';
+  if (ext === '.json') return 'json';
+  if (ext === '.md') return 'markdown';
+  if (ext === '.yaml' || ext === '.yml') return 'yaml';
+  return undefined;
+}
+
+function changeSetFingerprint(changeSet: PantherEyesChangeSet): string {
+  const stable = {
+    summary: changeSet.summary,
+    changes: changeSet.changes.map((change) => ({
+      kind: change.kind,
+      path: change.path,
+      reason: change.reason,
+      contentLength: change.content.length,
+    })),
+  };
+  return JSON.stringify(stable);
 }
