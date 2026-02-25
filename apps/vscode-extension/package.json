@@ -18,6 +18,7 @@
     "onCommand:panthereyes.askAgent",
     "onCommand:panthereyes.validateSecurityConfig",
     "onCommand:panthereyes.runScan",
+    "onCommand:panthereyes.previewPolicyDiff",
     "onCommand:panthereyes.setLlmProvider",
     "onCommand:panthereyes.agentStatus"
   ],
@@ -61,6 +62,10 @@
       {
         "command": "panthereyes.runScan",
         "title": "PantherEyes: Run Scan"
+      },
+      {
+        "command": "panthereyes.previewPolicyDiff",
+        "title": "PantherEyes: Preview Policy Diff"
       },
       {
         "command": "panthereyes.setLlmProvider",

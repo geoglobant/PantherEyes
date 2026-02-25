@@ -18,6 +18,21 @@ async function pickTarget(defaultTarget: 'web' | 'mobile'): Promise<'web' | 'mob
   }) as Promise<'web' | 'mobile' | undefined>;
 }
 
+async function pickEnv(title: string, defaultEnv: string): Promise<string | undefined> {
+  const picked = await vscode.window.showQuickPick(
+    [
+      { label: 'dev', description: 'Local/developer environment' },
+      { label: 'staging', description: 'Pre-production validation environment' },
+      { label: 'prod', description: 'Production policy baseline' },
+    ],
+    {
+      title,
+      placeHolder: defaultEnv,
+    },
+  );
+  return picked?.label;
+}
+
 async function pickProvider(current: LlmProvider): Promise<LlmProvider | undefined> {
   const picked = await vscode.window.showQuickPick(
     [
@@ -40,6 +55,20 @@ async function pickProvider(current: LlmProvider): Promise<LlmProvider | undefin
   }
 
   return undefined;
+}
+
+function getToolTextContent(result: { content?: Array<{ type: string; text?: string }> }): string | undefined {
+  return result.content?.find((item) => item.type === 'text' && typeof item.text === 'string')?.text;
+}
+
+async function openMarkdownPreview(title: string, content: string): Promise<void> {
+  const doc = await vscode.workspace.openTextDocument({
+    language: 'markdown',
+    content,
+  });
+  await vscode.window.showTextDocument(doc, { preview: true });
+  void vscode.commands.executeCommand('markdown.showPreviewToSide', doc.uri);
+  void vscode.window.showInformationMessage(title);
 }
 
 export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[] {
@@ -128,10 +157,90 @@ export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[]
     }
 
     const target = (await pickTarget(getConfiguredTarget())) ?? getConfiguredTarget();
-    const terminal = vscode.window.createTerminal({ name: 'PantherEyes Scan', cwd: workspacePath });
-    terminal.show(true);
-    terminal.sendText(`cargo run -p panthereyes-cli -- scan --target ${target} "${workspacePath}"`);
-    void vscode.window.showInformationMessage(`PantherEyes scan started in terminal for target ${target}.`);
+    const ready = await agentRuntime.ensureAgentReady({ interactive: true, reason: 'runScan-command' });
+    if (!ready) {
+      return;
+    }
+
+    const client = new PantherEyesAgentClient(getAgentServerUrl());
+    try {
+      const result = await client.callTool('panthereyes.scan_gate_report', {
+        rootDir: workspacePath,
+        target,
+        phase: 'static',
+        failOn: ['block'],
+        format: 'both',
+      });
+      const markdown = getToolTextContent(result);
+      if (markdown) {
+        await openMarkdownPreview(`PantherEyes scan report opened for ${target}.`, markdown);
+      } else {
+        void vscode.window.showInformationMessage(`PantherEyes scan completed for ${target}.`);
+      }
+    } catch (error) {
+      const err = error as Error;
+      const choice = await vscode.window.showErrorMessage(
+        `PantherEyes scan via tools bridge failed: ${err.message}`,
+        'Run in Terminal',
+      );
+      if (choice !== 'Run in Terminal') {
+        return;
+      }
+      const terminal = vscode.window.createTerminal({ name: 'PantherEyes Scan', cwd: workspacePath });
+      terminal.show(true);
+      terminal.sendText(`cargo run -p panthereyes-cli -- scan --target ${target} "${workspacePath}"`);
+      void vscode.window.showInformationMessage(`PantherEyes scan started in terminal for target ${target}.`);
+    }
+  });
+
+  const previewPolicyDiff = vscode.commands.registerCommand('panthereyes.previewPolicyDiff', async () => {
+    const workspacePath = getPrimaryWorkspacePath();
+    if (!workspacePath) {
+      await vscode.window.showErrorMessage('Open a workspace folder before previewing PantherEyes policy diff.');
+      return;
+    }
+
+    const target = (await pickTarget(getConfiguredTarget())) ?? getConfiguredTarget();
+    const defaultEnv = getConfiguredEnv();
+    const baseEnv = (await pickEnv('PantherEyes Base Environment', defaultEnv === 'prod' ? 'dev' : defaultEnv)) ?? 'dev';
+    const compareEnv = (await pickEnv('PantherEyes Compare Environment', defaultEnv)) ?? defaultEnv;
+
+    const ready = await agentRuntime.ensureAgentReady({ interactive: true, reason: 'previewPolicyDiff-command' });
+    if (!ready) {
+      return;
+    }
+
+    const client = new PantherEyesAgentClient(getAgentServerUrl());
+    try {
+      const result = await client.callTool('panthereyes.compare_policy_envs_report', {
+        rootDir: workspacePath,
+        target,
+        baseEnv,
+        compareEnv,
+        format: 'both',
+      });
+      const markdown = getToolTextContent(result);
+      if (markdown) {
+        await openMarkdownPreview(`PantherEyes policy diff report opened (${baseEnv} -> ${compareEnv}).`, markdown);
+      } else {
+        void vscode.window.showInformationMessage(`PantherEyes policy diff generated (${baseEnv} -> ${compareEnv}).`);
+      }
+    } catch (error) {
+      const err = error as Error;
+      const selected = await vscode.window.showErrorMessage(
+        `PantherEyes policy diff failed: ${err.message}`,
+        'Open Chat',
+      );
+      if (selected === 'Open Chat') {
+        showPanel({
+          message: `compare policy ${baseEnv} vs ${compareEnv} for ${target}`,
+          intent: 'compare_policy_envs',
+          env: compareEnv,
+          target,
+          autoSend: true,
+        });
+      }
+    }
   });
 
   const setLlmProvider = vscode.commands.registerCommand('panthereyes.setLlmProvider', async () => {
@@ -169,5 +278,5 @@ export function registerCommands(deps: RegisterCommandDeps): vscode.Disposable[]
     await agentRuntime.showStatusActions();
   });
 
-  return [askAgent, validateSecurityConfig, runScan, setLlmProvider, agentStatus];
+  return [askAgent, validateSecurityConfig, runScan, previewPolicyDiff, setLlmProvider, agentStatus];
 }
