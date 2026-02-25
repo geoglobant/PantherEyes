@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "panthereyes": {
+      "command": "/Users/george.michelon/Desktop/PantherEyes/scripts/mcp/panthereyes-mcp.sh",
+      "args": [],
+      "cwd": "/Users/george.michelon/Desktop/PantherEyes",
+      "env": {
+        "PANTHEREYES_ENABLE_LLM_ROUTER": "0"
+      }
+    }
+  }
+}
+

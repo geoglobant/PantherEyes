@@ -111,6 +111,35 @@ jq . artifacts/scans/pr-static-scan.json
 test "$(jq -r '.summary.status' artifacts/scans/pr-static-scan.json)" != "block"
 ```
 
+### Agent Tools Bridge (CI-style local gate)
+
+If you want CI/CD behavior using the PantherEyes agent (`/tools/*`) instead of only the CLI:
+
+```bash
+# Terminal 1: start the agent
+corepack pnpm agent:up
+
+# Terminal 2: run the CI helper wrapper
+./scripts/ci/panthereyes-gate.sh --root-dir . --target web --phase static
+```
+
+Artifacts are written to `artifacts/panthereyes/`.
+
+Environment variables are also supported (useful in CI):
+
+- `PANTHEREYES_AGENT_URL`
+- `PANTHEREYES_CI_ROOT_DIR`
+- `PANTHEREYES_CI_TARGET`
+- `PANTHEREYES_CI_PHASE`
+- `PANTHEREYES_CI_FAIL_ON`
+- `PANTHEREYES_CI_BASE_ENV`
+- `PANTHEREYES_CI_COMPARE_ENV`
+- `PANTHEREYES_CI_ARTIFACTS_DIR`
+
+Reusable GitHub composite action (for internal workflows):
+
+- `.github/actions/panthereyes-gate/action.yml`
+
 ### Release CI (local)
 
 ```bash
@@ -130,3 +159,20 @@ jq -r '"non-static: \(.summary.status) (\(.summary.findings | length) findings) 
 ## License
 
 Apache-2.0. See `LICENSE`.
+
+## MCP (Codex / VS Code local)
+
+PantherEyes also exposes an MCP server (stdio) for local assistant integration.
+
+Quick start:
+
+```bash
+./scripts/mcp/panthereyes-mcp.sh
+```
+
+See `docs/mcp-local-usage.md` for local setup examples (including Codex in VS Code).
+
+Additional guide (pt-BR, practical usage + team distribution):
+
+- `docs/agent-usage-and-mcp-distribution.md`
+- MCP config template example: `docs/examples/codex-vscode-mcp.example.json`

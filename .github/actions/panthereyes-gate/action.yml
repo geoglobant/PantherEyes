@@ -1,0 +1,83 @@
+name: PantherEyes Gate
+description: Run PantherEyes agent tools bridge CI gate (config validate + scan gate + reports)
+
+inputs:
+  root-dir:
+    description: Repository path to scan/policy-check
+    required: false
+    default: "."
+  target:
+    description: PantherEyes target (web|mobile)
+    required: false
+    default: "web"
+  phase:
+    description: Scan phase (static|non-static)
+    required: false
+    default: "static"
+  fail-on:
+    description: CSV of gate statuses that fail CI (e.g. block or warn,block)
+    required: false
+    default: "block"
+  base-env:
+    description: Base env for policy diff report
+    required: false
+    default: "dev"
+  compare-env:
+    description: Compare env for policy diff report
+    required: false
+    default: "prod"
+  artifacts-dir:
+    description: Output directory for PantherEyes JSON artifacts
+    required: false
+    default: "artifacts/panthereyes"
+  agent-url:
+    description: PantherEyes agent base URL
+    required: false
+    default: "http://localhost:4711"
+  start-agent:
+    description: Start local agent-server in background before running gate
+    required: false
+    default: "true"
+  install-deps:
+    description: Run corepack pnpm install --frozen-lockfile before starting agent
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Optional install JS dependencies
+      if: ${{ inputs.install-deps == 'true' }}
+      shell: bash
+      run: corepack pnpm install --frozen-lockfile
+
+    - name: Start PantherEyes agent (background)
+      if: ${{ inputs.start-agent == 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        nohup corepack pnpm agent:up > /tmp/panthereyes-agent.log 2>&1 &
+        for i in {1..45}; do
+          if curl -fsS "${{ inputs.agent-url }}/health" >/dev/null; then
+            echo "PantherEyes agent is healthy."
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "PantherEyes agent did not become healthy in time." >&2
+        tail -n 200 /tmp/panthereyes-agent.log || true
+        exit 1
+
+    - name: Run PantherEyes gate
+      shell: bash
+      env:
+        PANTHEREYES_AGENT_URL: ${{ inputs.agent-url }}
+        PANTHEREYES_CI_ROOT_DIR: ${{ inputs.root-dir }}
+        PANTHEREYES_CI_TARGET: ${{ inputs.target }}
+        PANTHEREYES_CI_PHASE: ${{ inputs.phase }}
+        PANTHEREYES_CI_FAIL_ON: ${{ inputs.fail-on }}
+        PANTHEREYES_CI_BASE_ENV: ${{ inputs.base-env }}
+        PANTHEREYES_CI_COMPARE_ENV: ${{ inputs.compare-env }}
+        PANTHEREYES_CI_ARTIFACTS_DIR: ${{ inputs.artifacts-dir }}
+      run: ./scripts/ci/panthereyes-gate.sh
+

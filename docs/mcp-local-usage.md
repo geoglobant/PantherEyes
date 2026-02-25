@@ -44,6 +44,12 @@ For development (watch mode):
 corepack pnpm mcp:up:dev
 ```
 
+Alternative wrapper (recommended for MCP clients such as Codex in VS Code):
+
+```bash
+./scripts/mcp/panthereyes-mcp.sh
+```
+
 ## Notes
 
 - MCP logs are written to **stderr** (so they do not corrupt the stdio protocol on stdout).
@@ -237,6 +243,47 @@ corepack pnpm mcp:up
 If the client launches the command directly, use an absolute workspace path as the command working directory (or call `corepack` with `--dir` if the client supports it).
 
 ### Claude Desktop (example)
+
+### Codex in VS Code (local MCP test setup)
+
+Use the PantherEyes MCP wrapper script so the client does not depend on your terminal working directory:
+
+```bash
+./scripts/mcp/panthereyes-mcp.sh
+```
+
+Example MCP client config snippet (adjust to the exact Codex VS Code MCP settings location/format in your environment):
+
+```json
+{
+  "mcpServers": {
+    "panthereyes": {
+      "command": "/ABSOLUTE/PATH/TO/PantherEyes/scripts/mcp/panthereyes-mcp.sh",
+      "args": [],
+      "cwd": "/ABSOLUTE/PATH/TO/PantherEyes",
+      "env": {
+        "PANTHEREYES_ENABLE_LLM_ROUTER": "0"
+      }
+    }
+  }
+}
+```
+
+Template file in this repo:
+
+- `docs/examples/codex-vscode-mcp.example.json`
+
+Local validation checklist:
+
+1. `corepack pnpm agent:deps:build`
+2. `./scripts/mcp/panthereyes-mcp.sh` (manually; confirm the process starts)
+3. Restart Codex/VS Code after MCP config changes
+4. Ask Codex to call a PantherEyes tool (for example `panthereyes.scan_gate_report`)
+
+Recommended first tool call for testing (samples):
+
+- `panthereyes.validate_security_config` with `rootDir: "samples/ios-panthereyes-demo"`
+- `panthereyes.scan_gate_report` with `target: "mobile"` and `phase: "static"`
 
 `claude_desktop_config.json` (example shape used by Claude Desktop; adjust path to your machine):
 

@@ -11,8 +11,10 @@
     "agent:build": "corepack pnpm run agent:deps:build && corepack pnpm --filter @panthereyes/agent-server build",
     "agent:up": "corepack pnpm run agent:build && PORT=4711 node apps/agent-server/dist/index.js",
     "agent:up:dev": "corepack pnpm run agent:deps:build && PORT=4711 corepack pnpm --filter @panthereyes/agent-server dev",
+    "agent:ci:gate": "./scripts/ci/panthereyes-gate.sh",
     "mcp:up": "corepack pnpm run agent:build && corepack pnpm --filter @panthereyes/agent-server mcp",
     "mcp:up:dev": "corepack pnpm run agent:deps:build && corepack pnpm --filter @panthereyes/agent-server mcp:dev",
+    "mcp:up:local": "./scripts/mcp/panthereyes-mcp.sh",
     "extension:package": "corepack pnpm --filter panthereyes-vscode-extension package:vsix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
