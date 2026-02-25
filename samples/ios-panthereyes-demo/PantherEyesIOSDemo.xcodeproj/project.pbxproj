@@ -1,0 +1,635 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		040270498482622CCDC28ED6 /* SecurityPolicyLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74566B02028851DB94B31415 /* SecurityPolicyLoader.swift */; };
+		12F78D1F10F2BD1B658BA1C9 /* PantherEyesPolicyProdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E42725FA63D18B440565C3 /* PantherEyesPolicyProdTests.swift */; };
+		13433B0391FE034B5E91A02A /* PantherEyesIOSDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28F66B68A674509A3603195 /* PantherEyesIOSDemoApp.swift */; };
+		1D631218D35212986EFC6D2C /* EditableCopyRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A077956EF5F75353A8DCAC4 /* EditableCopyRow.swift */; };
+		2338113BAF087DA7E8167ADE /* PantherEyesPolicyDevTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFAC6951F11CCD98EF622384 /* PantherEyesPolicyDevTests.swift */; };
+		2A6E6C87B0AF7CA29DA25B89 /* LabSectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 261F556DC74B4F5266E0CA39 /* LabSectionCard.swift */; };
+		3B3684E63BBB321A34A07EC1 /* prod.json in Resources */ = {isa = PBXBuildFile; fileRef = 2768B063A4ABE5C89A3727F5 /* prod.json */; };
+		3E1B24BFA677F80C5662EC5A /* SmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C002E6C1D251BE46E04465A6 /* SmokeTests.swift */; };
+		48DF6E80CB8B7D24A2709B2D /* CopyToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3D0EC92DA6C2B4E27BEC41 /* CopyToastView.swift */; };
+		5B3287EC488F808A1C4215F9 /* PantherEyesLabModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D27828D3D4A0805A5C1FEB /* PantherEyesLabModels.swift */; };
+		64572E454D8EDCCFD5991C70 /* TuistBundle+PantherEyesIOSDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852DA9D8CD55158F6C286022 /* TuistBundle+PantherEyesIOSDemoTests.swift */; };
+		6B23A3BDD3210FA6D5B9A705 /* PantherEyesLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3CF9BFD89FF192747DE3A86 /* PantherEyesLabView.swift */; };
+		734B885B025187F7F1670593 /* SecurityPolicyLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D4B455E2AA2CDF0D9E6794 /* SecurityPolicyLoaderTests.swift */; };
+		88DA3A10B146C1D4CCD4D962 /* dev.json in Resources */ = {isa = PBXBuildFile; fileRef = F1E85005FF9CF3C871E2043B /* dev.json */; };
+		90E74F5E2AB0F75771950C6B /* PantherEyesLabViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4A7FAEE3882811F413DD8E /* PantherEyesLabViewModel.swift */; };
+		DC1448F6569B42A7968C97F0 /* SectionFooterActionBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 428D0BEF5B1E0057130DD02B /* SectionFooterActionBar.swift */; };
+		E320808362B935018985FC5A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC821CBFBA8FD2698C902720 /* ContentView.swift */; };
+		F2F5CD90DF42487D32D5671A /* PantherEyesPolicyStagingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D885B005F8B1D7898FA63D5 /* PantherEyesPolicyStagingTests.swift */; };
+		FE5150CE776D85C5459A0124 /* DemoSecurityViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6319BF229ED5A383B13884BB /* DemoSecurityViewModel.swift */; };
+		FFACF3DFF52F203A8CA84E83 /* staging.json in Resources */ = {isa = PBXBuildFile; fileRef = 14B87FBADAB0286060AB0C71 /* staging.json */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C5B009A088F2AD6BF8B1BB74 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FBEC121D3D47B75A36C04B37 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CB2F3B08A947731D4842A5DC;
+			remoteInfo = PantherEyesIOSDemo;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		07692472361A089D1D1A13A9 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6D12C83C57C42B6EA7206CE4 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		09E42725FA63D18B440565C3 /* PantherEyesPolicyProdTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantherEyesPolicyProdTests.swift; sourceTree = "<group>"; };
+		14B87FBADAB0286060AB0C71 /* staging.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = staging.json; sourceTree = "<group>"; };
+		17761A64C71D61983C4C6145 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		261F556DC74B4F5266E0CA39 /* LabSectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabSectionCard.swift; sourceTree = "<group>"; };
+		2768B063A4ABE5C89A3727F5 /* prod.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = prod.json; sourceTree = "<group>"; };
+		30D4B455E2AA2CDF0D9E6794 /* SecurityPolicyLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityPolicyLoaderTests.swift; sourceTree = "<group>"; };
+		428D0BEF5B1E0057130DD02B /* SectionFooterActionBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionFooterActionBar.swift; sourceTree = "<group>"; };
+		4D4A7FAEE3882811F413DD8E /* PantherEyesLabViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantherEyesLabViewModel.swift; sourceTree = "<group>"; };
+		6319BF229ED5A383B13884BB /* DemoSecurityViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoSecurityViewModel.swift; sourceTree = "<group>"; };
+		64399B58E582E9EB0C5BBCA2 /* PantherEyesIOSDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PantherEyesIOSDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		74566B02028851DB94B31415 /* SecurityPolicyLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityPolicyLoader.swift; sourceTree = "<group>"; };
+		753F34CDBC1BDF38D55A4CAE /* PantherEyesIOSDemoTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "PantherEyesIOSDemoTests-Info.plist"; sourceTree = "<group>"; };
+		852DA9D8CD55158F6C286022 /* TuistBundle+PantherEyesIOSDemoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TuistBundle+PantherEyesIOSDemoTests.swift"; sourceTree = "<group>"; };
+		9A077956EF5F75353A8DCAC4 /* EditableCopyRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableCopyRow.swift; sourceTree = "<group>"; };
+		9D885B005F8B1D7898FA63D5 /* PantherEyesPolicyStagingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantherEyesPolicyStagingTests.swift; sourceTree = "<group>"; };
+		AB3D0EC92DA6C2B4E27BEC41 /* CopyToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyToastView.swift; sourceTree = "<group>"; };
+		B1D27828D3D4A0805A5C1FEB /* PantherEyesLabModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantherEyesLabModels.swift; sourceTree = "<group>"; };
+		B28F66B68A674509A3603195 /* PantherEyesIOSDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantherEyesIOSDemoApp.swift; sourceTree = "<group>"; };
+		C002E6C1D251BE46E04465A6 /* SmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokeTests.swift; sourceTree = "<group>"; };
+		C3CF9BFD89FF192747DE3A86 /* PantherEyesLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantherEyesLabView.swift; sourceTree = "<group>"; };
+		CFAC6951F11CCD98EF622384 /* PantherEyesPolicyDevTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PantherEyesPolicyDevTests.swift; sourceTree = "<group>"; };
+		EC821CBFBA8FD2698C902720 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		F0C2FD55F0B38AFEBD834AB4 /* PantherEyesIOSDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PantherEyesIOSDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1E85005FF9CF3C871E2043B /* dev.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = dev.json; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B6F6B37B0010DBCC69EEC4EA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2083DF86B647BF5287E49BA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0C8EB716EB17017E32272A08 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				EC821CBFBA8FD2698C902720 /* ContentView.swift */,
+				AB3D0EC92DA6C2B4E27BEC41 /* CopyToastView.swift */,
+				6319BF229ED5A383B13884BB /* DemoSecurityViewModel.swift */,
+				9A077956EF5F75353A8DCAC4 /* EditableCopyRow.swift */,
+				261F556DC74B4F5266E0CA39 /* LabSectionCard.swift */,
+				B28F66B68A674509A3603195 /* PantherEyesIOSDemoApp.swift */,
+				B1D27828D3D4A0805A5C1FEB /* PantherEyesLabModels.swift */,
+				C3CF9BFD89FF192747DE3A86 /* PantherEyesLabView.swift */,
+				4D4A7FAEE3882811F413DD8E /* PantherEyesLabViewModel.swift */,
+				428D0BEF5B1E0057130DD02B /* SectionFooterActionBar.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		1C96F0DF6F8D8B233C4A2CAF /* PantherEyesPolicyTests */ = {
+			isa = PBXGroup;
+			children = (
+				CFAC6951F11CCD98EF622384 /* PantherEyesPolicyDevTests.swift */,
+				09E42725FA63D18B440565C3 /* PantherEyesPolicyProdTests.swift */,
+				9D885B005F8B1D7898FA63D5 /* PantherEyesPolicyStagingTests.swift */,
+				74566B02028851DB94B31415 /* SecurityPolicyLoader.swift */,
+				30D4B455E2AA2CDF0D9E6794 /* SecurityPolicyLoaderTests.swift */,
+				C002E6C1D251BE46E04465A6 /* SmokeTests.swift */,
+			);
+			path = PantherEyesPolicyTests;
+			sourceTree = "<group>";
+		};
+		2015BF6CED2E29DD3A0437F6 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				D351E8495745DB29B52D25A0 /* Fixtures */,
+				1C96F0DF6F8D8B233C4A2CAF /* PantherEyesPolicyTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		2B1E68C29D6A2055FACA3C21 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				17761A64C71D61983C4C6145 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		39558D88078E549D49B0598C /* Project */ = {
+			isa = PBXGroup;
+			children = (
+				777ABD2A06793B1ABE874A7A /* Derived */,
+				9B228534BC0FF162493CB004 /* ios */,
+			);
+			name = Project;
+			sourceTree = "<group>";
+		};
+		5F4F6D883E98BA8CE5FA9BF6 /* policy */ = {
+			isa = PBXGroup;
+			children = (
+				F1E85005FF9CF3C871E2043B /* dev.json */,
+				2768B063A4ABE5C89A3727F5 /* prod.json */,
+				14B87FBADAB0286060AB0C71 /* staging.json */,
+			);
+			path = policy;
+			sourceTree = "<group>";
+		};
+		7730ABE7D0B9D071EB128546 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				852DA9D8CD55158F6C286022 /* TuistBundle+PantherEyesIOSDemoTests.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		777ABD2A06793B1ABE874A7A /* Derived */ = {
+			isa = PBXGroup;
+			children = (
+				E20075CEA65A6A324BD4476C /* InfoPlists */,
+				7730ABE7D0B9D071EB128546 /* Sources */,
+			);
+			path = Derived;
+			sourceTree = "<group>";
+		};
+		9B228534BC0FF162493CB004 /* ios */ = {
+			isa = PBXGroup;
+			children = (
+				2B1E68C29D6A2055FACA3C21 /* Resources */,
+				0C8EB716EB17017E32272A08 /* Sources */,
+				2015BF6CED2E29DD3A0437F6 /* Tests */,
+			);
+			path = ios;
+			sourceTree = "<group>";
+		};
+		B2B556129BAADEC06E95EC21 = {
+			isa = PBXGroup;
+			children = (
+				F80BA3DEDF9D02B2CBECAD0E /* Products */,
+				39558D88078E549D49B0598C /* Project */,
+			);
+			sourceTree = "<group>";
+		};
+		D351E8495745DB29B52D25A0 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				5F4F6D883E98BA8CE5FA9BF6 /* policy */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
+		E20075CEA65A6A324BD4476C /* InfoPlists */ = {
+			isa = PBXGroup;
+			children = (
+				753F34CDBC1BDF38D55A4CAE /* PantherEyesIOSDemoTests-Info.plist */,
+			);
+			path = InfoPlists;
+			sourceTree = "<group>";
+		};
+		F80BA3DEDF9D02B2CBECAD0E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F0C2FD55F0B38AFEBD834AB4 /* PantherEyesIOSDemo.app */,
+				64399B58E582E9EB0C5BBCA2 /* PantherEyesIOSDemoTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CB2F3B08A947731D4842A5DC /* PantherEyesIOSDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 72DE1699EC45A5063EB4F224 /* Build configuration list for PBXNativeTarget "PantherEyesIOSDemo" */;
+			buildPhases = (
+				924E17B330435EB03C6CEBF3 /* Sources */,
+				6BCA358D9AE2A9D36B7DF3F6 /* Resources */,
+				B6F6B37B0010DBCC69EEC4EA /* Frameworks */,
+				6D12C83C57C42B6EA7206CE4 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PantherEyesIOSDemo;
+			packageProductDependencies = (
+			);
+			productName = PantherEyesIOSDemo;
+			productReference = F0C2FD55F0B38AFEBD834AB4 /* PantherEyesIOSDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F072C951B4239876CB6BF11D /* PantherEyesIOSDemoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4D5F9F9451D54D175CC69471 /* Build configuration list for PBXNativeTarget "PantherEyesIOSDemoTests" */;
+			buildPhases = (
+				E89AA06B77A2B7D7478D5DD5 /* Sources */,
+				71C35239AFF6F54C2FC0B60E /* Resources */,
+				E2083DF86B647BF5287E49BA /* Frameworks */,
+				07692472361A089D1D1A13A9 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9F65F6709432267E0B149234 /* PBXTargetDependency */,
+			);
+			name = PantherEyesIOSDemoTests;
+			packageProductDependencies = (
+			);
+			productName = PantherEyesIOSDemoTests;
+			productReference = 64399B58E582E9EB0C5BBCA2 /* PantherEyesIOSDemoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FBEC121D3D47B75A36C04B37 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				TargetAttributes = {
+					F072C951B4239876CB6BF11D = {
+						TestTargetID = CB2F3B08A947731D4842A5DC;
+					};
+				};
+			};
+			buildConfigurationList = E7E149EE27BDE1D3F3E792F5 /* Build configuration list for PBXProject "PantherEyesIOSDemo" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = B2B556129BAADEC06E95EC21;
+			productRefGroup = F80BA3DEDF9D02B2CBECAD0E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CB2F3B08A947731D4842A5DC /* PantherEyesIOSDemo */,
+				F072C951B4239876CB6BF11D /* PantherEyesIOSDemoTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6BCA358D9AE2A9D36B7DF3F6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		71C35239AFF6F54C2FC0B60E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				88DA3A10B146C1D4CCD4D962 /* dev.json in Resources */,
+				3B3684E63BBB321A34A07EC1 /* prod.json in Resources */,
+				FFACF3DFF52F203A8CA84E83 /* staging.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		924E17B330435EB03C6CEBF3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E320808362B935018985FC5A /* ContentView.swift in Sources */,
+				48DF6E80CB8B7D24A2709B2D /* CopyToastView.swift in Sources */,
+				FE5150CE776D85C5459A0124 /* DemoSecurityViewModel.swift in Sources */,
+				1D631218D35212986EFC6D2C /* EditableCopyRow.swift in Sources */,
+				2A6E6C87B0AF7CA29DA25B89 /* LabSectionCard.swift in Sources */,
+				13433B0391FE034B5E91A02A /* PantherEyesIOSDemoApp.swift in Sources */,
+				5B3287EC488F808A1C4215F9 /* PantherEyesLabModels.swift in Sources */,
+				6B23A3BDD3210FA6D5B9A705 /* PantherEyesLabView.swift in Sources */,
+				90E74F5E2AB0F75771950C6B /* PantherEyesLabViewModel.swift in Sources */,
+				DC1448F6569B42A7968C97F0 /* SectionFooterActionBar.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E89AA06B77A2B7D7478D5DD5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				64572E454D8EDCCFD5991C70 /* TuistBundle+PantherEyesIOSDemoTests.swift in Sources */,
+				2338113BAF087DA7E8167ADE /* PantherEyesPolicyDevTests.swift in Sources */,
+				12F78D1F10F2BD1B658BA1C9 /* PantherEyesPolicyProdTests.swift in Sources */,
+				F2F5CD90DF42487D32D5671A /* PantherEyesPolicyStagingTests.swift in Sources */,
+				040270498482622CCDC28ED6 /* SecurityPolicyLoader.swift in Sources */,
+				734B885B025187F7F1670593 /* SecurityPolicyLoaderTests.swift in Sources */,
+				3E1B24BFA677F80C5662EC5A /* SmokeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9F65F6709432267E0B149234 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = PantherEyesIOSDemo;
+			target = CB2F3B08A947731D4842A5DC /* PantherEyesIOSDemo */;
+			targetProxy = C5B009A088F2AD6BF8B1BB74 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2073B4AEB118DBBA5876166F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Derived/InfoPlists/PantherEyesIOSDemoTests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.panthereyes.samples.iosdemo.tests;
+				PRODUCT_NAME = PantherEyesIOSDemoTests;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PantherEyesIOSDemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PantherEyesIOSDemo";
+				TEST_TARGET_NAME = PantherEyesIOSDemo;
+			};
+			name = Release;
+		};
+		45B8454EDBEECC68F0E8EE6F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		673FACE1A8CD254DE8CC1ED9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = ios/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.panthereyes.samples.iosdemo;
+				PRODUCT_NAME = PantherEyesIOSDemo;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		72F91A6053F6ECD89584F95E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = ios/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.panthereyes.samples.iosdemo;
+				PRODUCT_NAME = PantherEyesIOSDemo;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		96BD2F61AF9792981FC9F9C9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Derived/InfoPlists/PantherEyesIOSDemoTests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.panthereyes.samples.iosdemo.tests;
+				PRODUCT_NAME = PantherEyesIOSDemoTests;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PantherEyesIOSDemo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PantherEyesIOSDemo";
+				TEST_TARGET_NAME = PantherEyesIOSDemo;
+			};
+			name = Debug;
+		};
+		FD16567F302CBFDADAAB7266 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4D5F9F9451D54D175CC69471 /* Build configuration list for PBXNativeTarget "PantherEyesIOSDemoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				96BD2F61AF9792981FC9F9C9 /* Debug */,
+				2073B4AEB118DBBA5876166F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		72DE1699EC45A5063EB4F224 /* Build configuration list for PBXNativeTarget "PantherEyesIOSDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				72F91A6053F6ECD89584F95E /* Debug */,
+				673FACE1A8CD254DE8CC1ED9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E7E149EE27BDE1D3F3E792F5 /* Build configuration list for PBXProject "PantherEyesIOSDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FD16567F302CBFDADAAB7266 /* Debug */,
+				45B8454EDBEECC68F0E8EE6F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = FBEC121D3D47B75A36C04B37 /* Project object */;
+}

@@ -1,0 +1,32 @@
+{
+  "command": "scan",
+  "target": "mobile",
+  "phase": "static",
+  "path": "samples/android-panthereyes-demo",
+  "profile": null,
+  "config": null,
+  "summary": {
+    "target": "mobile",
+    "status": "block",
+    "findings": [
+      {
+        "id": "mobile.android.cleartext-traffic-enabled",
+        "title": "Cleartext traffic habilitado",
+        "severity": "high",
+        "target": "android",
+        "file": "android/app/src/main/AndroidManifest.xml",
+        "message": "android:usesCleartextTraffic=\\\"true\\\" detectado no AndroidManifest.xml.",
+        "remediation": "Desabilite cleartext traffic ou restrinja via Network Security Config para domínios específicos."
+      },
+      {
+        "id": "mobile.android.debuggable-enabled",
+        "title": "Aplicação Android debuggable",
+        "severity": "medium",
+        "target": "android",
+        "file": "android/app/src/main/AndroidManifest.xml",
+        "message": "android:debuggable=\\\"true\\\" detectado no AndroidManifest.xml.",
+        "remediation": "Garanta builds release com android:debuggable=false e revise configuração por variante."
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+# PantherEyes sample exceptions for the Android demo app.
+configVersion: 1
+version: 1
+exceptions:
+  - exceptionId: ANDROID-DEMO-EXC-001
+    ruleId: mobile.android.cleartext-traffic-enabled
+    environments: [dev]
+    targets: [mobile]
+    reason: Local emulator demo still uses a cleartext HTTP stub endpoint during development.
+    owner: android-platform-team
+    approvedBy: appsec-android-reviewer
+    expiresAt: 2027-12-31
+    expiresOn: 2027-12-31
+    scope:
+      paths:
+        - android/app/src/main/AndroidManifest.xml

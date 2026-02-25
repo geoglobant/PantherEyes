@@ -1,0 +1,40 @@
+# PantherEyes sample rule catalog for the Android demo app.
+configVersion: 1
+version: 1
+rules:
+  - ruleId: mobile.android.cleartext-traffic-enabled
+    title: Android cleartext traffic enabled
+    description: AndroidManifest should not enable cleartext traffic in production builds.
+    defaultSeverity: high
+    remediation: Disable usesCleartextTraffic or scope it with a Network Security Config for demo-only hosts.
+    tags: [mobile, android, network, cleartext]
+    allowException: true
+    targets: [mobile]
+    sampleTargets: [android]
+  - ruleId: mobile.android.allow-backup-enabled
+    title: Android allowBackup enabled
+    description: Demo application enables backups to create a hardening remediation exercise.
+    defaultSeverity: medium
+    remediation: Set android:allowBackup to false for production unless a reviewed backup strategy exists.
+    tags: [mobile, android, backup, hardening]
+    allowException: true
+    targets: [mobile]
+    sampleTargets: [android]
+  - ruleId: mobile.android.debuggable-enabled
+    title: Android application debuggable
+    description: android:debuggable should never be true in release-ready manifests.
+    defaultSeverity: medium
+    remediation: Remove android:debuggable from the manifest and enforce debuggable=false in release builds.
+    tags: [mobile, android, release-hardening]
+    allowException: false
+    targets: [mobile]
+    sampleTargets: [android]
+  - ruleId: mobile.android.hardcoded-fake-secret
+    title: Fake sensitive constant embedded in source
+    description: Demo-only hardcoded token should be replaced before production release.
+    defaultSeverity: medium
+    remediation: Move secrets to secure backend exchange or build-time non-production fixtures only.
+    tags: [mobile, android, secrets, demo]
+    allowException: false
+    targets: [mobile]
+    sampleTargets: [android]

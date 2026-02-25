@@ -1,0 +1,9 @@
+{
+  "env": "prod",
+  "mode": "enforce",
+  "failOnSeverity": "medium",
+  "directives": {
+    "allowDemoCleartext": "false",
+    "minScore": "95"
+  }
+}

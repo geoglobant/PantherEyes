@@ -1,0 +1,9 @@
+{
+  "env": "staging",
+  "mode": "warn",
+  "failOnSeverity": "high",
+  "directives": {
+    "allowDemoCleartext": "false",
+    "minScore": "80"
+  }
+}

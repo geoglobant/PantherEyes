@@ -1,0 +1,16 @@
+# PantherEyes sample exceptions for the iOS demo app.
+configVersion: 1
+version: 1
+exceptions:
+  - exceptionId: IOS-DEMO-EXC-001
+    ruleId: mobile.ios.ats.arbitrary-loads-enabled
+    environments: [dev]
+    targets: [mobile]
+    reason: Local lab needs relaxed ATS to exercise a cleartext endpoint in development.
+    owner: mobile-platform-team
+    approvedBy: mobile-security-reviewer
+    expiresAt: 2027-12-31
+    expiresOn: 2027-12-31
+    scope:
+      paths:
+        - ios/Resources/Info.plist

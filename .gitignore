@@ -33,10 +33,12 @@ local.properties
 **/build/
 
 # iOS / Xcode / Tuist
+Derived/
 DerivedData/
 *.xcuserstate
 *.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
+*.xcworkspace/.tuist-generated
 .build/
 .swiftpm/
 .tuist-cache/

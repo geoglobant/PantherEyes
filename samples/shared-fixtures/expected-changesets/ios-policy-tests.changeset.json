@@ -1,0 +1,16 @@
+{
+  "env": "prod",
+  "changeSet": {
+    "dryRun": true,
+    "summary": "Generated 1 policy test file for ios/prod",
+    "changes": [
+      {
+        "kind": "create",
+        "path": "ios/Tests/PantherEyesPolicyTests/PantherEyesPolicyProdTests.swift",
+        "language": "swift",
+        "reason": "Deterministic policy regression test generated from effective policy and directives.",
+        "content": "import XCTest\n\nfinal class PantherEyesPolicyProdTests: XCTestCase {\n    struct PolicyRule {\n        let ruleId: String\n        let enabled: Bool\n        let effectiveSeverity: String\n    }\n\n    private let mode = \"enforce\"\n    private let failOnSeverity = \"medium\"\n    private let policyRules: [PolicyRule] = [\n        PolicyRule(ruleId: \"mobile.ios.ats.arbitrary-loads-enabled\", enabled: true, effectiveSeverity: \"critical\"),\n        PolicyRule(ruleId: \"mobile.ios.hardcoded-fake-secret\", enabled: true, effectiveSeverity: \"high\")\n    ]\n    private let directives: [String: String] = [\n        \"allowDemoCleartext\": \"false\",\n        \"minScore\": \"95\",\n        \"networkProfile\": \"\\\"strict\\\"\",\n        \"platform\": \"\\\"ios\\\"\",\n        \"requireExceptionApproval\": \"true\",\n        \"requireTlsEverywhere\": \"true\",\n        \"sampleEnvironmentLabel\": \"\\\"ios-prod\\\"\"\n    ]\n\n    func testPolicyMetadata_prod() {\n        XCTAssertEqual(mode, \"enforce\")\n        XCTAssertEqual(failOnSeverity, \"medium\")\n        XCTAssertGreaterThanOrEqual(policyRules.count, 2)\n    }\n\n    func testDirectives_prod() {\n        XCTAssertEqual(directives[\"allowDemoCleartext\"], \"false\")\n        XCTAssertEqual(directives[\"minScore\"], \"95\")\n        XCTAssertEqual(directives[\"networkProfile\"], \"\\\"strict\\\"\")\n        XCTAssertEqual(directives[\"platform\"], \"\\\"ios\\\"\")\n        XCTAssertEqual(directives[\"requireExceptionApproval\"], \"true\")\n        XCTAssertEqual(directives[\"requireTlsEverywhere\"], \"true\")\n        XCTAssertEqual(directives[\"sampleEnvironmentLabel\"], \"\\\"ios-prod\\\"\")\n    }\n\n    func testRule_mobile_ios_ats_arbitrary_loads_enabled_isPresent() {\n        let rules = Set(policyRules.map(\\.ruleId))\n        XCTAssertTrue(rules.contains(\"mobile.ios.ats.arbitrary-loads-enabled\"))\n    }\n\n    func testRule_mobile_ios_hardcoded_fake_secret_isPresent() {\n        let rules = Set(policyRules.map(\\.ruleId))\n        XCTAssertTrue(rules.contains(\"mobile.ios.hardcoded-fake-secret\"))\n    }\n}\n"
+      }
+    ]
+  }
+}

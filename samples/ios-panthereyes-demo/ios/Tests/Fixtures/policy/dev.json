@@ -1,0 +1,9 @@
+{
+  "env": "dev",
+  "mode": "audit",
+  "failOnSeverity": "critical",
+  "directives": {
+    "allowDemoCleartext": "true",
+    "minScore": "60"
+  }
+}

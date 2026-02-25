@@ -1,0 +1,22 @@
+# PantherEyes sample rule catalog for the iOS demo app.
+configVersion: 1
+version: 1
+rules:
+  - ruleId: mobile.ios.ats.arbitrary-loads-enabled
+    title: ATS arbitrary loads enabled
+    description: Info.plist should not enable NSAllowsArbitraryLoads in production builds.
+    defaultSeverity: high
+    remediation: Disable NSAllowsArbitraryLoads and add scoped ATS exceptions only when required.
+    tags: [mobile, ios, ats, transport]
+    allowException: true
+    targets: [mobile]
+    sampleTargets: [ios]
+  - ruleId: mobile.ios.hardcoded-fake-secret
+    title: Fake sensitive constant embedded in source
+    description: Demo-only fake secret should be removed before production release.
+    defaultSeverity: medium
+    remediation: Replace hardcoded values with runtime configuration or secure server-issued tokens.
+    tags: [mobile, ios, secrets, demo]
+    allowException: false
+    targets: [mobile]
+    sampleTargets: [ios]

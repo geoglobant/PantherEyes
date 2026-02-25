@@ -1,0 +1,23 @@
+{
+  "command": "scan",
+  "target": "mobile",
+  "phase": "static",
+  "path": "samples/ios-panthereyes-demo",
+  "profile": null,
+  "config": null,
+  "summary": {
+    "target": "mobile",
+    "status": "block",
+    "findings": [
+      {
+        "id": "mobile.ios.ats.arbitrary-loads-enabled",
+        "title": "ATS permite carregamentos arbitrários",
+        "severity": "high",
+        "target": "ios",
+        "file": "ios/Resources/Info.plist",
+        "message": "NSAllowsArbitraryLoads=true detectado no Info.plist.",
+        "remediation": "Desabilite NSAllowsArbitraryLoads e configure exceções ATS específicas por domínio."
+      }
+    ]
+  }
+}

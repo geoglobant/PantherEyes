@@ -1,0 +1,62 @@
+# PantherEyes sample policy for the iOS demo app.
+# Note: the current policy engine resolves target overrides under `mobile` (not `ios`).
+configVersion: 1
+version: 1
+defaults:
+  mode: warn
+  failOnSeverity: high
+  directives:
+    minScore: 80
+    allowDemoCleartext: false
+    requireExceptionApproval: true
+  ruleOverrides:
+    mobile.ios.ats.arbitrary-loads-enabled:
+      severity: high
+      directives:
+        remediationTier: immediate
+envs:
+  dev:
+    mode: audit
+    failOnSeverity: critical
+    directives:
+      minScore: 60
+      allowDemoCleartext: true
+      sampleEnvironmentLabel: ios-dev
+    ruleOverrides:
+      mobile.ios.ats.arbitrary-loads-enabled:
+        severity: medium
+    targets:
+      mobile:
+        directives:
+          platform: ios
+          networkProfile: relaxed
+  staging:
+    mode: warn
+    failOnSeverity: high
+    directives:
+      minScore: 80
+      allowDemoCleartext: false
+      sampleEnvironmentLabel: ios-staging
+    targets:
+      mobile:
+        directives:
+          platform: ios
+          networkProfile: restricted
+  prod:
+    mode: enforce
+    failOnSeverity: medium
+    directives:
+      minScore: 95
+      allowDemoCleartext: false
+      sampleEnvironmentLabel: ios-prod
+    ruleOverrides:
+      mobile.ios.ats.arbitrary-loads-enabled:
+        severity: critical
+      mobile.ios.hardcoded-fake-secret:
+        severity: high
+    targets:
+      mobile:
+        directives:
+          platform: ios
+          networkProfile: strict
+          requireTlsEverywhere: true
