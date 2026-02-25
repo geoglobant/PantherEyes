@@ -22,6 +22,7 @@ type McpToolName =
   | 'panthereyes.compare_policy_envs_report'
   | 'panthereyes.scan'
   | 'panthereyes.scan_gate'
+  | 'panthereyes.scan_gate_report'
   | 'panthereyes.explain_finding'
   | 'panthereyes.suggest_remediation'
   | 'panthereyes.create_policy_exception';
@@ -141,6 +142,23 @@ export class PantherEyesMcpToolHost {
               description: 'Statuses that should fail CI (default: [\"block\"])',
               items: { type: 'string', enum: ['warn', 'block'] },
             },
+          },
+          ['rootDir', 'target'],
+        ),
+      },
+      {
+        name: 'panthereyes.scan_gate_report',
+        description: 'Run scan gate and return a PR/CI-friendly markdown + JSON report.',
+        inputSchema: objectSchema(
+          {
+            rootDir: { type: 'string', description: 'Path to scan (sample/app root)' },
+            target: { type: 'string', enum: ['web', 'mobile'] },
+            phase: { type: 'string', enum: ['static', 'non-static'], default: 'static' },
+            failOn: {
+              type: 'array',
+              items: { type: 'string', enum: ['warn', 'block'] },
+            },
+            format: { type: 'string', enum: ['markdown', 'json', 'both'], default: 'both' },
           },
           ['rootDir', 'target'],
         ),
@@ -419,6 +437,37 @@ export class PantherEyesMcpToolHost {
         };
       }
 
+      case 'panthereyes.scan_gate_report': {
+        const rootDir = readString(rawArgs, 'rootDir');
+        const target = readTarget(rawArgs, 'target');
+        const phase = readPhase(rawArgs, 'phase');
+        const failOn = readFailOnStatuses(rawArgs, 'failOn') ?? ['block'];
+        const format = readOptionalEnum(rawArgs, 'format', ['markdown', 'json', 'both'] as const) ?? 'both';
+        const scanResult = await runPantherEyesScanCli({
+          cwd: process.cwd(),
+          rootDir,
+          target,
+          phase,
+        });
+        const gate = buildScanGateResult({ rootDir, target, phase, failOn, scanResult });
+        const report = buildScanGateReport(gate);
+
+        const content: McpToolCallResult['content'] = [];
+        if (format === 'markdown' || format === 'both') {
+          content.push({ type: 'text', text: report.markdown });
+        } else {
+          content.push({ type: 'text', text: report.summary.headline });
+        }
+        if (format === 'json' || format === 'both') {
+          content.push({ type: 'json', json: report });
+        }
+
+        return {
+          content,
+          structuredContent: report,
+        };
+      }
+
       case 'panthereyes.explain_finding': {
         const findingId = readString(rawArgs, 'findingId');
         const knowledge = resolveFindingKnowledge(findingId);
@@ -618,6 +667,7 @@ function assertMcpToolName(name: string): McpToolName {
       'panthereyes.compare_policy_envs_report',
       'panthereyes.scan',
       'panthereyes.scan_gate',
+      'panthereyes.scan_gate_report',
       'panthereyes.explain_finding',
       'panthereyes.suggest_remediation',
       'panthereyes.create_policy_exception',
@@ -969,6 +1019,43 @@ function buildScanGateResult(input: {
         : `Scan status '${status}' does not trigger failOn thresholds (${input.failOn.join(', ')}).`,
     },
     raw: input.scanResult,
+  };
+}
+
+function buildScanGateReport(gateResult: ReturnType<typeof buildScanGateResult>) {
+  const generatedAt = new Date().toISOString();
+  const headline = `${gateResult.gate.shouldFail ? 'Failing' : 'Passing'} scan gate for ${gateResult.target}/${gateResult.phase}`;
+  const markdown = [
+    '# PantherEyes Scan Gate Report',
+    '',
+    `- Generated at: ${generatedAt}`,
+    `- Root: \`${gateResult.rootDir}\``,
+    `- Target: \`${gateResult.target}\``,
+    `- Phase: \`${gateResult.phase}\``,
+    `- Scan status: **${gateResult.scan.status}**`,
+    `- Findings: **${gateResult.scan.findingsCount}**`,
+    `- Gate decision: **${gateResult.gate.decision}**`,
+    `- Should fail CI: **${gateResult.gate.shouldFail ? 'true' : 'false'}**`,
+    `- failOn: \`${gateResult.gate.failOn.join(', ')}\``,
+    `- Reason: ${gateResult.gate.reason}`,
+    '',
+  ].join('\n');
+
+  return {
+    reportType: 'panthereyes.scan_gate_report',
+    generatedAt,
+    summary: {
+      headline,
+      target: gateResult.target,
+      phase: gateResult.phase,
+      status: gateResult.scan.status,
+      findingsCount: gateResult.scan.findingsCount,
+      shouldFail: gateResult.gate.shouldFail,
+    },
+    gate: gateResult.gate,
+    scan: gateResult.scan,
+    markdown,
+    raw: gateResult.raw,
   };
 }
 

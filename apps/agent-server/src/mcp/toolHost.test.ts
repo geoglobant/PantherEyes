@@ -7,7 +7,7 @@ test('mcp tool host lists PantherEyes tools', () => {
   const host = new PantherEyesMcpToolHost(createMcpLogger({ test: 'tool-list' }));
   const tools = host.listTools();
 
-  assert.equal(tools.length, 11);
+  assert.equal(tools.length, 12);
   assert.deepEqual(
     tools.map((tool) => tool.name),
     [
@@ -18,6 +18,7 @@ test('mcp tool host lists PantherEyes tools', () => {
       'panthereyes.compare_policy_envs_report',
       'panthereyes.scan',
       'panthereyes.scan_gate',
+      'panthereyes.scan_gate_report',
       'panthereyes.generate_policy_tests',
       'panthereyes.explain_finding',
       'panthereyes.suggest_remediation',
@@ -110,6 +111,33 @@ test('mcp scan_gate returns CI-friendly decision', async () => {
   assert.equal(typeof structured.gate.decision, 'string');
   assert.equal(typeof structured.scan.status, 'string');
   assert.equal(typeof structured.scan.findingsCount, 'number');
+});
+
+test('mcp scan_gate_report returns markdown + json report', async () => {
+  const host = new PantherEyesMcpToolHost(createMcpLogger({ test: 'scan-gate-report' }));
+
+  const result = await host.callTool({
+    name: 'panthereyes.scan_gate_report',
+    arguments: {
+      rootDir: 'samples/ios-panthereyes-demo',
+      target: 'mobile',
+      phase: 'static',
+      failOn: ['block'],
+      format: 'both',
+    },
+  });
+
+  assert.equal(result.content.some((item) => item.type === 'text'), true);
+  assert.equal(result.content.some((item) => item.type === 'json'), true);
+  const structured = result.structuredContent as {
+    reportType: string;
+    summary: { shouldFail: boolean; headline: string };
+    markdown: string;
+  };
+  assert.equal(structured.reportType, 'panthereyes.scan_gate_report');
+  assert.equal(typeof structured.summary.shouldFail, 'boolean');
+  assert.match(structured.summary.headline, /scan gate/i);
+  assert.match(structured.markdown, /PantherEyes Scan Gate Report/);
 });
 
 test('mcp explain_finding resolves demo alias', async () => {

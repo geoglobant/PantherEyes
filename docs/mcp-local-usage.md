@@ -20,6 +20,7 @@ PantherEyes tools exposed:
 - `panthereyes.compare_policy_envs_report`
 - `panthereyes.scan`
 - `panthereyes.scan_gate`
+- `panthereyes.scan_gate_report`
 - `panthereyes.generate_policy_tests`
 - `panthereyes.explain_finding`
 - `panthereyes.suggest_remediation`
@@ -160,6 +161,28 @@ Returns a CI/bot-friendly decision object with:
 - `gate.shouldFail`
 - `gate.failOn`
 
+### `panthereyes.scan_gate_report`
+
+```json
+{
+  "name": "panthereyes.scan_gate_report",
+  "arguments": {
+    "rootDir": "samples/ios-panthereyes-demo",
+    "target": "mobile",
+    "phase": "static",
+    "failOn": ["block"],
+    "format": "both"
+  }
+}
+```
+
+Returns:
+
+- `summary` (headline, status, findingsCount, shouldFail)
+- `gate` (decision + fail thresholds)
+- `markdown` (ready for PR comments / CI summaries)
+- `raw` (original scan payload)
+
 ### `panthereyes.explain_finding`
 
 ```json
@@ -283,6 +306,23 @@ curl -s http://localhost:4711/tools/call \
       "failOn": ["block"]
     }
   }' | jq .
+```
+
+Example PR-summary style report:
+
+```bash
+curl -s http://localhost:4711/tools/call \
+  -H 'content-type: application/json' \
+  -d '{
+    "name": "panthereyes.scan_gate_report",
+    "arguments": {
+      "rootDir": "samples/ios-panthereyes-demo",
+      "target": "mobile",
+      "phase": "static",
+      "failOn": ["block"],
+      "format": "markdown"
+    }
+  }' | jq -r '.content[] | select(.type=="text") | .text'
 ```
 
 Bridge endpoints:
