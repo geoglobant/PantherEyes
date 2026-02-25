@@ -21,6 +21,7 @@ PantherEyes tools exposed:
 - `panthereyes.generate_policy_tests`
 - `panthereyes.explain_finding`
 - `panthereyes.suggest_remediation`
+- `panthereyes.create_policy_exception`
 
 Transport:
 
@@ -137,6 +138,21 @@ corepack pnpm mcp:up:dev
 }
 ```
 
+### `panthereyes.create_policy_exception`
+
+```json
+{
+  "name": "panthereyes.create_policy_exception",
+  "arguments": {
+    "rootDir": "samples/ios-panthereyes-demo",
+    "env": "dev",
+    "target": "mobile",
+    "findingId": "IOS-ATS-001",
+    "owner": "security-team"
+  }
+}
+```
+
 ## MCP client configuration examples (Codex / Claude)
 
 The PantherEyes MCP server uses **stdio**, so any MCP-capable client that supports launching a local command can connect to it.
@@ -193,7 +209,7 @@ Required fields conceptually:
 After registering the MCP server in your client:
 
 1. Verify the client can connect and list tools.
-2. Confirm these tools appear: `panthereyes.scan`, `panthereyes.compare_policy_envs`, `panthereyes.generate_policy_tests`, `panthereyes.explain_finding`.
+2. Confirm these tools appear: `panthereyes.scan`, `panthereyes.compare_policy_envs`, `panthereyes.generate_policy_tests`, `panthereyes.explain_finding`, `panthereyes.create_policy_exception`.
 3. Run a simple call with `samples/ios-panthereyes-demo` as `rootDir`.
 4. Check MCP logs (stderr) if the client reports startup errors.
 
@@ -211,4 +227,4 @@ The HTTP `/chat` server now also supports deterministic intents useful for demos
 1. Add formal MCP schema tests (request/response framing)
 2. Normalize shared schemas between `/chat` and MCP tools
 3. Add more protocol/tool call integration tests (success + invalid params)
-4. Expose `/chat` intent capabilities (for example `create_policy_exception`) as dedicated MCP tools where it adds value
+4. Add a dedicated MCP tool for policy env comparison reports / export snapshots (if needed by CI bots)

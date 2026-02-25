@@ -69,6 +69,11 @@ export const explainFindingPlanner: Planner = {
         ? `Explained finding ${explanation.findingId} (${explanation.severity}) for ${explanation.target}.`
         : `Could not map finding from prompt; returned generic guidance.`;
 
+      const llmAugmentation = await maybeGenerateLlmAugmentation(context, {
+        message: input.request.message,
+        explanation,
+      });
+
       return {
         result: {
           plannerId: 'explain_finding',
@@ -78,6 +83,7 @@ export const explainFindingPlanner: Planner = {
           toolOutputs: {
             explanation,
             policyContext: previewSummary ?? null,
+            llmAugmentation,
           },
           context: {
             env,
@@ -98,3 +104,31 @@ export const explainFindingPlanner: Planner = {
   },
 };
 
+async function maybeGenerateLlmAugmentation(
+  context: PlannerContext,
+  input: { message: string; explanation: { findingId: string; title: string; explanation: string; remediation: string[] } },
+): Promise<{ provider: string; content: string } | null> {
+  if (context.llm.provider === 'none') {
+    return null;
+  }
+
+  try {
+    const prompt = [
+      'You are helping explain a security finding in PantherEyes.',
+      `User request: ${input.message}`,
+      `Finding ID: ${input.explanation.findingId}`,
+      `Title: ${input.explanation.title}`,
+      `Deterministic explanation: ${input.explanation.explanation}`,
+      `Deterministic remediation hints: ${input.explanation.remediation.join(' | ')}`,
+      'Return a concise developer-focused explanation with one remediation priority ordering.',
+    ].join('\n');
+    const content = await context.llm.generate(prompt);
+    return { provider: context.llm.provider, content };
+  } catch (error) {
+    context.logger.warn('planner.explain_finding.llm_fallback_failed', {
+      provider: context.llm.provider,
+      error,
+    });
+    return null;
+  }
+}

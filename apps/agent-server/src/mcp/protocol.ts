@@ -3,6 +3,9 @@ import type { JsonRpcFailure, JsonRpcRequest, JsonRpcResponse, JsonRpcSuccess } 
 interface ProtocolHandlers {
   onRequest: (message: JsonRpcRequest) => Promise<void> | void;
   onProtocolError?: (error: Error) => void;
+  output?: {
+    write: (chunk: Uint8Array | string) => unknown;
+  };
 }
 
 export class StdioJsonRpcProtocol {
@@ -13,13 +16,17 @@ export class StdioJsonRpcProtocol {
   attach(): void {
     process.stdin.on('data', (chunk) => {
       try {
-        const next = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-        this.buffer = Buffer.concat([this.buffer, next]);
-        this.consumeBuffer();
+        this.ingestChunk(chunk);
       } catch (error) {
         this.handlers.onProtocolError?.(error as Error);
       }
     });
+  }
+
+  ingestChunk(chunk: Buffer | string | Uint8Array): void {
+    const next = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    this.buffer = Buffer.concat([this.buffer, next]);
+    this.consumeBuffer();
   }
 
   async dispatchMessage(raw: unknown): Promise<void> {
@@ -59,7 +66,8 @@ export class StdioJsonRpcProtocol {
   private writeMessage(payload: JsonRpcResponse): void {
     const body = Buffer.from(JSON.stringify(payload), 'utf8');
     const header = Buffer.from(`Content-Length: ${body.length}\r\n\r\n`, 'utf8');
-    process.stdout.write(Buffer.concat([header, body]));
+    const output = this.handlers.output ?? process.stdout;
+    output.write(Buffer.concat([header, body]));
   }
 
   private consumeBuffer(): void {
@@ -96,7 +104,7 @@ export class StdioJsonRpcProtocol {
   }
 }
 
-function parseContentLength(headerText: string): number {
+export function parseContentLength(headerText: string): number {
   const lines = headerText.split('\r\n');
   for (const line of lines) {
     const [name, value] = line.split(':', 2);

@@ -7,7 +7,7 @@ test('mcp tool host lists PantherEyes tools', () => {
   const host = new PantherEyesMcpToolHost(createMcpLogger({ test: 'tool-list' }));
   const tools = host.listTools();
 
-  assert.equal(tools.length, 8);
+  assert.equal(tools.length, 9);
   assert.deepEqual(
     tools.map((tool) => tool.name),
     [
@@ -19,6 +19,7 @@ test('mcp tool host lists PantherEyes tools', () => {
       'panthereyes.generate_policy_tests',
       'panthereyes.explain_finding',
       'panthereyes.suggest_remediation',
+      'panthereyes.create_policy_exception',
     ],
   );
 });
@@ -119,4 +120,25 @@ test('mcp suggest_remediation returns deterministic guidance for alias', async (
   assert.equal(structured.known, true);
   assert.equal(structured.findingId, 'mobile.android.cleartext-traffic-enabled');
   assert.equal(structured.policyGuidance.length >= 2, true);
+});
+
+test('mcp create_policy_exception returns planner ChangeSet', async () => {
+  const host = new PantherEyesMcpToolHost(createMcpLogger({ test: 'create-policy-exception' }));
+  const result = await host.callTool({
+    name: 'panthereyes.create_policy_exception',
+    arguments: {
+      rootDir: 'samples/ios-panthereyes-demo',
+      env: 'dev',
+      target: 'mobile',
+      findingId: 'IOS-ATS-001',
+      owner: 'security-team',
+    },
+  });
+
+  const structured = result.structuredContent as {
+    planner: { plannerId: string; changeSet: { dryRun: true; changes: Array<{ path: string }> } };
+  };
+  assert.equal(structured.planner.plannerId, 'create_policy_exception');
+  assert.equal(structured.planner.changeSet.dryRun, true);
+  assert.equal(structured.planner.changeSet.changes[0]?.path, '.panthereyes/exceptions.yaml');
 });

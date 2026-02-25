@@ -82,6 +82,11 @@ export const suggestRemediationPlanner: Planner = {
         ? `Suggested remediation for ${knowledge.canonicalId} with policy guidance for ${env}/${target}.`
         : 'Returned generic remediation guidance because finding could not be mapped.';
 
+      const llmAugmentation = await maybeGenerateLlmRemediation(context, {
+        message: input.request.message,
+        remediation,
+      });
+
       return {
         result: {
           plannerId: 'suggest_remediation',
@@ -91,6 +96,7 @@ export const suggestRemediationPlanner: Planner = {
           toolOutputs: {
             remediation,
             policyContext: previewSummary ?? null,
+            llmAugmentation,
           },
           context: {
             env,
@@ -111,3 +117,39 @@ export const suggestRemediationPlanner: Planner = {
   },
 };
 
+async function maybeGenerateLlmRemediation(
+  context: PlannerContext,
+  input: {
+    message: string;
+    remediation: {
+      findingId: string;
+      title: string;
+      remediationSteps: string[];
+      policyGuidance: string[];
+    };
+  },
+): Promise<{ provider: string; content: string } | null> {
+  if (context.llm.provider === 'none') {
+    return null;
+  }
+
+  try {
+    const prompt = [
+      'You are proposing remediation for a PantherEyes security finding.',
+      `User request: ${input.message}`,
+      `Finding ID: ${input.remediation.findingId}`,
+      `Title: ${input.remediation.title}`,
+      `Deterministic remediation steps: ${input.remediation.remediationSteps.join(' | ')}`,
+      `Policy guidance: ${input.remediation.policyGuidance.join(' | ')}`,
+      'Return a concise remediation plan with prioritization and rollout caution.',
+    ].join('\n');
+    const content = await context.llm.generate(prompt);
+    return { provider: context.llm.provider, content };
+  } catch (error) {
+    context.logger.warn('planner.suggest_remediation.llm_fallback_failed', {
+      provider: context.llm.provider,
+      error,
+    });
+    return null;
+  }
+}

@@ -5,6 +5,7 @@ import { NoopChatModelAdapter } from '../adapters/llm';
 import { WorkspacePolicyConfigAdapter } from '../adapters/policyConfig';
 import { PantherEyesSdkAdapter } from '../adapters/sdk';
 import type { Logger } from '../logging';
+import { AgentRuntime } from '../runtime';
 import { ToolExecutor } from '../tools/executor';
 import { ToolRegistry } from '../tools/registry';
 import type { ToolOutputMap } from '../tools/types';
@@ -20,7 +21,8 @@ type McpToolName =
   | 'panthereyes.compare_policy_envs'
   | 'panthereyes.scan'
   | 'panthereyes.explain_finding'
-  | 'panthereyes.suggest_remediation';
+  | 'panthereyes.suggest_remediation'
+  | 'panthereyes.create_policy_exception';
 
 interface McpToolCallParams {
   name: string;
@@ -153,6 +155,21 @@ export class PantherEyesMcpToolHost {
             prodBlock: { type: 'boolean' },
           },
           ['findingId'],
+        ),
+      },
+      {
+        name: 'panthereyes.create_policy_exception',
+        description: 'Generate a dry-run ChangeSet to add/update an exception in .panthereyes/exceptions.yaml.',
+        inputSchema: objectSchema(
+          {
+            rootDir: { type: 'string' },
+            env: { type: 'string' },
+            target: { type: 'string', enum: ['web', 'mobile'] },
+            findingId: { type: 'string', description: 'Finding ID or alias (e.g., IOS-ATS-001)' },
+            owner: { type: 'string', description: 'Optional approver/owner hint' },
+            reason: { type: 'string', description: 'Optional explicit reason text' },
+          },
+          ['rootDir', 'env', 'target', 'findingId'],
         ),
       },
     ];
@@ -417,6 +434,42 @@ export class PantherEyesMcpToolHost {
           structuredContent: result,
         };
       }
+
+      case 'panthereyes.create_policy_exception': {
+        const rootDir = readString(rawArgs, 'rootDir');
+        const env = readString(rawArgs, 'env');
+        const target = readTarget(rawArgs, 'target');
+        const findingId = readString(rawArgs, 'findingId');
+        const owner = readOptionalString(rawArgs, 'owner');
+        const reason = readOptionalString(rawArgs, 'reason');
+        const message = [
+          'Create policy exception',
+          `for ${findingId}`,
+          owner ? `owner ${owner}` : '',
+          reason ? `reason ${reason}` : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+
+        const runtime = new AgentRuntime(this.logger.child({ component: 'mcp.runtimeBridge' }));
+        const response = await runtime.handleChat({
+          message,
+          intent: 'create_policy_exception',
+          context: { rootDir, env, target },
+        });
+
+        return {
+          content: [
+            { type: 'text', text: response.planner.summary },
+            { type: 'json', json: response.planner },
+          ],
+          structuredContent: {
+            intent: response.intent,
+            planner: response.planner,
+            tools: response.tools,
+          },
+        };
+      }
     }
   }
 
@@ -458,6 +511,7 @@ function assertMcpToolName(name: string): McpToolName {
       'panthereyes.scan',
       'panthereyes.explain_finding',
       'panthereyes.suggest_remediation',
+      'panthereyes.create_policy_exception',
     ]);
   if (!allowed.has(name as McpToolName)) {
     throw new Error(`Unknown MCP tool: ${name}`);
