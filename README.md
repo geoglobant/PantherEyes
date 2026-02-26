@@ -2,7 +2,11 @@
 
 PantherEyes is a monorepo for an application and web security product focused on automated checks, policy analysis, and developer workflow integration.
 
-## Planned Components
+## What Is PantherEyes?
+
+PantherEyes is a developer-first security platform for mobile apps and websites. It combines a Rust CLI scanner, a TypeScript policy engine/SDK, an agent server (intents, planners, tools), a VS Code extension, and MCP/HTTP tool interfaces so teams can run security checks locally, generate policy tests, and enforce security gates in CI/CD.
+
+## Core Components
 
 - `crates/panthereyes-cli`: Rust CLI for local execution and CI.
 - `crates/panthereyes-core`: shared core types and contracts.
@@ -172,9 +176,10 @@ Quick start:
 
 See [`docs/mcp-local-usage.md`](docs/mcp-local-usage.md) for local setup examples (including Codex in VS Code).
 
-Additional guide (pt-BR, practical usage + team distribution):
+Additional guides:
 
 - [`docs/agent-usage-and-mcp-distribution.md`](docs/agent-usage-and-mcp-distribution.md)
+- [`docs/mcp-tutorial-pt-br.md`](docs/mcp-tutorial-pt-br.md)
 - MCP config template example: `docs/examples/codex-vscode-mcp.example.json`
 - MCP (future npm distribution) template: `docs/examples/codex-vscode-mcp-npx.example.json`
 - MCP publish workflow template: `.github/workflows/publish-panthereyes-mcp.yml`
