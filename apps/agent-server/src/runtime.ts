@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { PantherEyesCliAdapter } from './adapters/cli';
-import { NoopChatModelAdapter } from './adapters/llm';
+import { createDefaultLlmRouter, NoopChatModelAdapter, RoutedChatModelAdapter, type ChatModelAdapter } from './adapters/llm';
 import { WorkspacePolicyConfigAdapter } from './adapters/policyConfig';
 import { PantherEyesSdkAdapter } from './adapters/sdk';
 import { resolveIntent } from './intents/resolver';
@@ -13,14 +13,16 @@ import type { ChatRequest, ChatResponse } from './types';
 export class AgentRuntime {
   private readonly plannerRegistry: PlannerRegistry;
   private readonly toolExecutor: ToolExecutor;
+  private readonly llmAdapter: ChatModelAdapter;
 
   constructor(private readonly logger: Logger) {
     const toolRegistry = new ToolRegistry();
     this.plannerRegistry = new PlannerRegistry();
+    this.llmAdapter = createRuntimeLlmAdapter(logger);
     this.toolExecutor = new ToolExecutor(toolRegistry, logger, {
       sdk: new PantherEyesSdkAdapter(),
       cli: new PantherEyesCliAdapter(),
-      llm: new NoopChatModelAdapter(),
+      llm: this.llmAdapter,
       policyConfig: new WorkspacePolicyConfigAdapter(),
     });
   }
@@ -47,6 +49,7 @@ export class AgentRuntime {
         requestId,
         logger: reqLogger,
         tools: this.toolExecutor,
+        llm: this.llmAdapter,
       },
     );
 
@@ -64,5 +67,19 @@ export class AgentRuntime {
     });
 
     return response;
+  }
+}
+
+function createRuntimeLlmAdapter(logger: Logger): ChatModelAdapter {
+  if (process.env.PANTHEREYES_ENABLE_LLM_ROUTER !== '1') {
+    return new NoopChatModelAdapter();
+  }
+
+  try {
+    const router = createDefaultLlmRouter(logger.child({ component: 'llm.router' }));
+    return new RoutedChatModelAdapter(router);
+  } catch (error) {
+    logger.warn('agent.runtime.llm.fallback_to_noop', { error });
+    return new NoopChatModelAdapter();
   }
 }

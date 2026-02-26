@@ -7,9 +7,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
+    "mcp": "node dist/mcp/index.js",
+    "mcp:dev": "tsx watch src/mcp/index.ts",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/planners/generatePolicyTests.integration.test.ts src/llm/routingPolicy.test.ts"
+    "test": "tsx --test src/planners/generatePolicyTests.integration.test.ts src/planners/intentV1.integration.test.ts src/llm/routingPolicy.test.ts src/mcp/toolHost.test.ts src/mcp/protocol.test.ts src/mcp/server.test.ts src/server.http-tools.test.ts"
   },
   "dependencies": {
     "@panthereyes/policy-engine": "workspace:*",

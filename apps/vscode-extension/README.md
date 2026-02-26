@@ -6,10 +6,14 @@ VS Code extension to integrate with the PantherEyes `agent-server`, send prompts
 
 - Command `PantherEyes: Ask Agent`
 - Command `PantherEyes: Validate Security Config`
-- Command `PantherEyes: Run Scan` (opens a terminal running the CLI)
+- Command `PantherEyes: Run Scan` (uses `/tools/call` + `scan_gate_report`, with terminal fallback)
+- Command `PantherEyes: Preview Policy Diff` (uses `/tools/call` + `compare_policy_envs_report`)
+- Command `PantherEyes: Show Tools Schema` (uses `/tools/schema`)
 - Command `PantherEyes: Set LLM Provider` (BYOK-ready via `SecretStorage`, no real provider yet)
 - Command `PantherEyes: Agent Status` (healthcheck / restart / logs)
 - Simple chat panel (Webview) with response + `ChangeSet` preview
+- Webview tool runner (`Run Tool...`) for direct `/tools/call` experiments
+- Webview history/timeline for agent/tool activity
 - Auto-start local agent for `localhost` endpoints (default enabled)
 
 ## Configuration
@@ -80,6 +84,11 @@ corepack pnpm agent:up
 - The extension sends a `POST` request to `http://localhost:4711/chat`.
 - The JSON response is displayed in the panel.
 - The `ChangeSet` is shown as cards with content previews.
+- Utility commands can call the HTTP tools bridge (`/tools/call`) directly for faster structured actions.
+- Tool results (scan, policy diff, schema) are rendered inside the PantherEyes webview.
+- When a result contains a `ChangeSet` (for example `create_policy_exception`), the panel supports:
+  - **Preview Diff** (select a file change and open a VS Code diff)
+  - **Apply ChangeSet** (after confirmation)
 
 ## Example Payload Sent to `agent-server`
 
@@ -117,6 +126,9 @@ Placeholder assets currently available:
   - If auto-start is disabled, start the agent manually (`corepack pnpm agent:up`).
 - `Request body is empty` or `400`
   - Check the payload and the `env/target` fields in the panel.
+- `PantherEyes scan via tools bridge failed`
+  - The extension offers `Run in Terminal` fallback.
+  - Verify the local agent supports `/tools/call` and the tool `panthereyes.scan_gate_report`.
 - `cargo run ...` fails when running `Run Scan`
   - Confirm the Rust toolchain is installed and the monorepo is opened at the root.
 - `Auto-start failed`

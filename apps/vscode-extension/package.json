@@ -4,6 +4,7 @@
   "description": "VS Code extension scaffold for PantherEyes security feedback.",
   "version": "0.1.0",
   "publisher": "panthereyes",
+  "icon": "media/panther-logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/geoglobant/PantherEyes.git",
@@ -18,6 +19,8 @@
     "onCommand:panthereyes.askAgent",
     "onCommand:panthereyes.validateSecurityConfig",
     "onCommand:panthereyes.runScan",
+    "onCommand:panthereyes.previewPolicyDiff",
+    "onCommand:panthereyes.showToolsSchema",
     "onCommand:panthereyes.setLlmProvider",
     "onCommand:panthereyes.agentStatus"
   ],
@@ -61,6 +64,14 @@
       {
         "command": "panthereyes.runScan",
         "title": "PantherEyes: Run Scan"
+      },
+      {
+        "command": "panthereyes.previewPolicyDiff",
+        "title": "PantherEyes: Preview Policy Diff"
+      },
+      {
+        "command": "panthereyes.showToolsSchema",
+        "title": "PantherEyes: Show Tools Schema"
       },
       {
         "command": "panthereyes.setLlmProvider",

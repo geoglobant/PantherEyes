@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "panthereyes": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@georgemichelon/panthereyes-mcp"
+      ],
+      "env": {
+        "PANTHEREYES_ENABLE_LLM_ROUTER": "0"
+      }
+    }
+  }
+}
+

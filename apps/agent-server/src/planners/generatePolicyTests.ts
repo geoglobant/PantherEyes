@@ -1,41 +1,6 @@
-import type { AgentTarget, ChatRequest, ToolTrace } from '../types';
+import type { ToolTrace } from '../types';
 import type { Planner, PlannerContext, PlannerRunInput, PlannerRunOutput } from './types';
-
-function inferEnv(message: string): string {
-  const normalized = message.toLowerCase();
-  if (normalized.includes('prod') || normalized.includes('production')) {
-    return 'prod';
-  }
-  if (normalized.includes('staging') || normalized.includes('stage')) {
-    return 'staging';
-  }
-  if (normalized.includes('dev') || normalized.includes('development')) {
-    return 'dev';
-  }
-  return 'dev';
-}
-
-function inferTarget(message: string): AgentTarget {
-  const normalized = message.toLowerCase();
-  if (normalized.includes('mobile') || normalized.includes('android') || normalized.includes('ios')) {
-    return 'mobile';
-  }
-  return 'web';
-}
-
-function resolvePlannerInputs(request: ChatRequest): { env: string; target: AgentTarget; rootDir: string } {
-  const env = request.context?.env?.trim() || inferEnv(request.message);
-  const target = request.context?.target || inferTarget(request.message);
-  const rootDir = request.context?.rootDir?.trim() || process.cwd();
-  return { env, target, rootDir };
-}
-
-function normalizeToolError(error: unknown): { trace?: ToolTrace; cause?: unknown } {
-  if (typeof error === 'object' && error !== null && 'trace' in error) {
-    return error as { trace?: ToolTrace; cause?: unknown };
-  }
-  return { cause: error };
-}
+import { normalizeToolError, resolvePlannerInputs } from './common';
 
 export const generatePolicyTestsPlanner: Planner = {
   id: 'generate_policy_tests',
